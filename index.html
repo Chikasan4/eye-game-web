@@ -3,86 +3,108 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>動体視力トレーニング Mobile</title>
+    <title>動体視力トレ V2</title>
     <style>
         body {
             margin: 0;
             overflow: hidden;
-            background-color: #202020; /* 目に優しいダークグレー */
+            background-color: #202020;
             font-family: sans-serif;
             color: white;
-            touch-action: none; /* スマホでのダブルタップ拡大などを防止 */
+            touch-action: none;
         }
-        #gameCanvas {
-            display: block;
-            margin: 0 auto;
+        /* ゲーム画面（最初は隠しておく） */
+        #game-container {
+            display: none;
+            width: 100%;
+            height: 100%;
         }
+        canvas { display: block; }
+        
+        /* UIレイヤー（スコアなど） */
         #ui-layer {
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none; /* UIの下のキャンバスをクリックできるようにする */
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
             padding: 20px;
             box-sizing: border-box;
+            display: flex;
+            justify-content: space-between;
         }
-        .hud {
-            font-size: 18px;
-            font-weight: bold;
-            text-shadow: 1px 1px 2px black;
-        }
-        #start-screen {
+        .hud { font-size: 18px; font-weight: bold; text-shadow: 1px 1px 2px black; }
+
+        /* メニュー画面（ここがV2の主役） */
+        #menu-screen {
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.8);
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: #1a1a1a;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            pointer-events: auto;
-            z-index: 10;
+            z-index: 100;
         }
-        h1 { margin-bottom: 20px; font-size: 24px; text-align: center;}
-        button {
-            padding: 15px 40px;
-            font-size: 20px;
-            background-color: #00FF7F; /* Target Color */
-            color: #000;
-            border: none;
-            border-radius: 50px;
-            cursor: pointer;
+        h1 { margin-bottom: 30px; font-size: 28px; text-align: center; color: #00FF7F; }
+        
+        /* ボタンのデザイン */
+        .btn {
+            width: 80%;
+            max-width: 300px;
+            padding: 15px;
+            margin: 10px;
+            font-size: 18px;
             font-weight: bold;
+            color: white;
+            background-color: #444;
+            border: 2px solid #00FF7F;
+            border-radius: 10px;
+            cursor: pointer;
+            text-align: center;
         }
-        button:active { transform: scale(0.95); }
+        .btn:active { transform: scale(0.95); background-color: #555; }
+        
+        /* 終了画面 */
+        #result-screen {
+            display: none;
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.85);
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 50;
+        }
+        #result-msg { font-size: 32px; margin-bottom: 20px; text-align: center; }
     </style>
 </head>
 <body>
 
-    <canvas id="gameCanvas"></canvas>
-
-    <div id="ui-layer">
-        <div class="hud">Score: <span id="scoreVal">0</span></div>
-        <div class="hud" style="text-align: right;">Time: <span id="timeVal">30</span></div>
+    <div id="menu-screen">
+        <h1>動体視力トレ<br>Mobile V2</h1>
+        <div class="btn" onclick="startGame('random')">① ランダム (基礎)</div>
+        <div class="btn" onclick="alert('V3で実装予定です！')">② 8の字 (Coming Soon)</div>
+        <div class="btn" onclick="alert('V4で実装予定です！')">③ 遠近 (Coming Soon)</div>
     </div>
 
-    <div id="start-screen">
-        <h1>動体視力<br>トレーニング V1</h1>
-        <p>緑のボールをタップせよ！</p>
-        <button id="startBtn">START</button>
+    <div id="game-container">
+        <canvas id="gameCanvas"></canvas>
+        <div id="ui-layer">
+            <div class="hud">Score: <span id="scoreVal">0</span></div>
+            <div class="hud">Time: <span id="timeVal">30</span></div>
+        </div>
+    </div>
+
+    <div id="result-screen">
+        <div id="result-msg">Time Up!</div>
+        <div class="btn" onclick="backToMenu()">メニューに戻る</div>
     </div>
 
     <script>
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
-        const startScreen = document.getElementById('start-screen');
-        const startBtn = document.getElementById('startBtn');
+        const menuScreen = document.getElementById('menu-screen');
+        const gameContainer = document.getElementById('game-container');
+        const resultScreen = document.getElementById('result-screen');
         const scoreEl = document.getElementById('scoreVal');
         const timeEl = document.getElementById('timeVal');
 
@@ -93,13 +115,9 @@
         let targets = [];
         let gameLoopId;
         let timerId;
+        let currentMode = 'random';
 
-        // 設定：ボールのスペック
-        const TARGET_RADIUS = 25; // スマホで押しやすいサイズ
-        const TARGET_COLOR = '#00FF7F'; // SpringGreen
-        const BASE_SPEED = 4; 
-
-        // 画面サイズ調整
+        // 画面サイズ設定
         function resize() {
             width = window.innerWidth;
             height = window.innerHeight;
@@ -109,47 +127,24 @@
         window.addEventListener('resize', resize);
         resize();
 
-        class Target {
-            constructor() {
-                this.x = Math.random() * (width - TARGET_RADIUS * 2) + TARGET_RADIUS;
-                this.y = Math.random() * (height - TARGET_RADIUS * 2) + TARGET_RADIUS;
-                this.vx = (Math.random() - 0.5) * BASE_SPEED * 2;
-                this.vy = (Math.random() - 0.5) * BASE_SPEED * 2;
-                this.radius = TARGET_RADIUS;
-            }
-
-            update() {
-                this.x += this.vx;
-                this.y += this.vy;
-
-                // 壁の跳ね返り
-                if (this.x - this.radius < 0 || this.x + this.radius > width) this.vx *= -1;
-                if (this.y - this.radius < 0 || this.y + this.radius > height) this.vy *= -1;
-            }
-
-            draw() {
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-                ctx.fillStyle = TARGET_COLOR;
-                ctx.fill();
-                ctx.closePath();
-            }
-
-            isClicked(x, y) {
-                const dist = Math.hypot(this.x - x, this.y - y);
-                return dist < this.radius + 10; // 少し判定を甘くして押しやすく
-            }
-        }
-
-        function startGame() {
+        // ■ ゲーム開始処理
+        function startGame(mode) {
+            currentMode = mode;
+            menuScreen.style.display = 'none';      // メニュー消す
+            resultScreen.style.display = 'none';    // 結果画面消す
+            gameContainer.style.display = 'block';  // ゲーム出す
+            
             score = 0;
-            timeLeft = 30;
+            timeLeft = 30; // 秒数設定
             scoreEl.innerText = score;
             timeEl.innerText = timeLeft;
             gameActive = true;
-            targets = [new Target()]; // 最初は1個
-            startScreen.style.display = 'none';
             
+            // モードに応じた初期化（今はランダムのみ）
+            targets = [];
+            spawnTarget();
+
+            // タイマースタート
             clearInterval(timerId);
             timerId = setInterval(() => {
                 timeLeft--;
@@ -160,56 +155,91 @@
             update();
         }
 
+        // ■ メニューに戻る
+        function backToMenu() {
+            resultScreen.style.display = 'none';
+            gameContainer.style.display = 'none';
+            menuScreen.style.display = 'flex';
+        }
+
+        // ■ ゲーム終了
         function endGame() {
             gameActive = false;
             clearInterval(timerId);
             cancelAnimationFrame(gameLoopId);
-            startScreen.style.display = 'flex';
-            document.querySelector('#start-screen h1').innerHTML = `Time Up!<br>Score: ${score}`;
-            startBtn.innerText = "RETRY";
+            document.getElementById('result-msg').innerHTML = `Time Up!<br>Score: ${score}`;
+            resultScreen.style.display = 'flex';
         }
 
+        // ボール生成（ランダム）
+        function spawnTarget() {
+            const r = 25;
+            const x = Math.random() * (width - r * 2) + r;
+            const y = Math.random() * (height - r * 2) + r;
+            const speed = 4;
+            targets.push({
+                x: x, y: y, r: r,
+                vx: (Math.random() - 0.5) * speed * 2,
+                vy: (Math.random() - 0.5) * speed * 2,
+                color: '#00FF7F'
+            });
+        }
+
+        // ■ メインループ
         function update() {
             if (!gameActive) return;
-
             ctx.clearRect(0, 0, width, height);
 
+            // ボールの移動と描画
             targets.forEach(t => {
-                t.update();
-                t.draw();
+                t.x += t.vx;
+                t.y += t.vy;
+                if (t.x - t.r < 0 || t.x + t.r > width) t.vx *= -1;
+                if (t.y - t.r < 0 || t.y + t.r > height) t.vy *= -1;
+
+                ctx.beginPath();
+                ctx.arc(t.x, t.y, t.r, 0, Math.PI * 2);
+                ctx.fillStyle = t.color;
+                ctx.fill();
+                ctx.closePath();
             });
 
             gameLoopId = requestAnimationFrame(update);
         }
 
-        function handleInput(x, y) {
+        // ■ タッチ/クリック判定
+        function handleInput(e) {
             if (!gameActive) return;
+            e.preventDefault(); // スクロール防止
+
+            // タッチ座標の取得（マルチタッチ対応）
+            const touches = e.changedTouches || [e]; 
             
-            // 逆順でチェック（重なっているときは手前を優先）
-            for (let i = targets.length - 1; i >= 0; i--) {
-                if (targets[i].isClicked(x, y)) {
-                    score++;
-                    scoreEl.innerText = score;
-                    // クリックしたら場所を変えて再出現（反射神経トレ）
-                    targets[i] = new Target(); 
+            for (let i = 0; i < touches.length; i++) {
+                const tx = touches[i].clientX;
+                const ty = touches[i].clientY;
+
+                // 逆順ループ（手前のボールを優先）
+                for (let j = targets.length - 1; j >= 0; j--) {
+                    const t = targets[j];
+                    const dist = Math.hypot(t.x - tx, t.y - ty);
                     
-                    // 5点ごとにボールが増える（難易度アップ）
-                    if (score % 5 === 0) {
-                        targets.push(new Target());
+                    if (dist < t.r + 15) { // ちょっと判定甘めに
+                        score++;
+                        scoreEl.innerText = score;
+                        targets.splice(j, 1); // 消す
+                        spawnTarget(); // 新しいのを出す
+                        
+                        // 難易度アップ（5点ごとに1個増える）
+                        if (score % 5 === 0) spawnTarget();
+                        break;
                     }
-                    break; 
                 }
             }
         }
 
-        // マウスとタッチの両対応
-        window.addEventListener('mousedown', e => handleInput(e.clientX, e.clientY));
-        window.addEventListener('touchstart', e => {
-            const touch = e.touches[0];
-            handleInput(touch.clientX, touch.clientY);
-        }, {passive: false});
-
-        startBtn.addEventListener('click', startGame);
+        window.addEventListener('mousedown', handleInput);
+        window.addEventListener('touchstart', handleInput, {passive: false});
 
     </script>
 </body>
