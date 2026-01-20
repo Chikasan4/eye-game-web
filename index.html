@@ -3,88 +3,92 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>動体視力トレ V7 (Real Badminton)</title>
+    <title>動体視力トレ V9 (Ultimate)</title>
     <style>
         body {
             margin: 0; overflow: hidden;
-            /* リアルなコートの雰囲気をCSSグラデーションで表現 */
-            background: linear-gradient(to bottom, #8B4513 0%, #8B4513 10%, #006400 10%, #006400 90%, #8B4513 90%, #8B4513 100%);
+            background-color: #202020;
             font-family: sans-serif; color: white; touch-action: none;
         }
         #game-container { display: none; width: 100%; height: 100%; }
         canvas { display: block; }
         
+        /* UIレイヤー */
         #ui-layer {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             pointer-events: none; padding: 20px; box-sizing: border-box;
             display: flex; justify-content: space-between;
         }
         .hud { font-size: 18px; font-weight: bold; text-shadow: 1px 1px 2px black; }
-
+        
         /* メニュー画面 */
         #menu-screen {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background-color: rgba(0,0,0,0.9); display: flex; flex-direction: column;
+            background-color: #1a1a1a; display: flex; flex-direction: column;
             align-items: center; justify-content: center; z-index: 100;
+            overflow-y: auto; /* 縦スクロール許可 */
         }
-        h1 { margin-bottom: 10px; font-size: 24px; text-align: center; color: #fff; }
+        h1 { margin: 20px 0; font-size: 24px; text-align: center; color: #00FF7F; }
         
+        /* モード選択ボタン */
         .btn {
-            width: 80%; max-width: 300px; padding: 15px; margin: 8px;
-            font-size: 18px; font-weight: bold; color: #333;
-            background-color: #fff; border: 3px solid #fff;
-            border-radius: 30px; cursor: pointer; text-align: center;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            width: 85%; max-width: 350px; padding: 15px; margin: 8px 0;
+            font-size: 18px; font-weight: bold; color: white;
+            background-color: #444; border: 2px solid #00FF7F;
+            border-radius: 12px; cursor: pointer; text-align: center;
         }
-        .btn:active { transform: scale(0.95); background-color: #ddd; }
+        .btn:active { transform: scale(0.96); background-color: #555; }
         
-        /* 設定エリア */
-        .setting-box {
-            width: 80%; max-width: 300px;
-            background-color: #444; padding: 15px; margin: 15px 0;
-            border-radius: 10px; text-align: center; color: white;
+        /* カテゴリラベル */
+        .label { color: #aaa; font-size: 14px; margin-top: 15px; margin-bottom: 5px; width: 85%; max-width: 350px; text-align: left;}
+
+        /* バドミントンモード用の特別なボタン */
+        .btn-badminton {
+            background-color: #2E8B57; border-color: white;
         }
-        input[type=range] { width: 100%; margin-top: 10px; accent-color: #00FF7F; }
-        
-        /* リザルト画面（診断結果表示用） */
+        /* 測定モード用の特別なボタン */
+        .btn-measure {
+            background-color: #b22222; border-color: #ff6347;
+        }
+
+        /* 終了画面 */
         #result-screen {
             display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background-color: rgba(0,0,0,0.9); flex-direction: column;
-            align-items: center; justify-content: center; z-index: 50; color: white;
+            align-items: center; justify-content: center; z-index: 50;
         }
-        #result-title { font-size: 24px; margin-bottom: 10px; }
-        #result-score { font-size: 48px; font-weight: bold; color: #00FF7F; margin-bottom: 20px; }
-        #result-level { font-size: 28px; font-weight: bold; color: yellow; margin-bottom: 30px; text-align: center;}
+        #result-msg { font-size: 24px; margin-bottom: 10px; color: #ccc; }
+        #result-score { font-size: 40px; font-weight: bold; color: #00FF7F; margin-bottom: 20px; text-align: center;}
+        #result-detail { font-size: 18px; color: white; margin-bottom: 30px; text-align: center; line-height: 1.5;}
     </style>
 </head>
 <body>
 
     <div id="menu-screen">
-        <h1>Badminton Trainer<br>V7 Real</h1>
-        
-        <div class="setting-box">
-            <label>球速レベル: <span id="speedDisplay" style="color:#00FF7F; font-weight:bold;">4</span></label>
-            <br>
-            <input type="range" id="speedSlider" min="1" max="10" value="4" oninput="updateSpeedLabel()">
-            <div style="font-size: 12px; color: #aaa; margin-top:5px;">(レベルが高いほど診断結果UP!)</div>
-        </div>
+        <h1>動体視力トレ V9<br>All-in-One</h1>
 
-        <div class="btn" onclick="startGame()">🏸 実戦診断スタート</div>
-        <div style="margin-top:20px; color:#ccc; font-size:12px;">奥から手前に飛んでくる<br>シャトルをタップ！</div>
+        <div class="label">■ 基礎トレーニング (ボール)</div>
+        <div class="btn" onclick="startGame('random')">① 反射 (ランダム)</div>
+        <div class="btn" onclick="startGame('figure8')">② 追従 (8の字)</div>
+        <div class="btn" onclick="startGame('depth')">③ 距離 (遠近)</div>
+
+        <div class="label">■ 実戦＆測定</div>
+        <div class="btn btn-badminton" onclick="startGame('badminton')">④ バドミントン実戦</div>
+        <div class="btn btn-measure" onclick="startGame('measure')">⑤ 動体視力測定 (サドンデス)</div>
     </div>
 
     <div id="game-container">
         <canvas id="gameCanvas"></canvas>
         <div id="ui-layer">
-            <div class="hud">Hits: <span id="scoreVal">0</span></div>
-            <div class="hud">Time: <span id="timeVal">30</span></div>
+            <div class="hud" id="hud-left">Score: 0</div>
+            <div class="hud" id="hud-right">Time: 30</div>
         </div>
     </div>
 
     <div id="result-screen">
-        <div id="result-title">診断結果</div>
-        <div>ヒット数: <span id="result-score">0</span> 回</div>
-        <div id="result-level">判定中...</div>
+        <div id="result-msg">Finish!</div>
+        <div id="result-score">0</div>
+        <div id="result-detail">...</div>
         <div class="btn" onclick="backToMenu()">メニューに戻る</div>
     </div>
 
@@ -94,64 +98,88 @@
         const menuScreen = document.getElementById('menu-screen');
         const gameContainer = document.getElementById('game-container');
         const resultScreen = document.getElementById('result-screen');
-        const scoreEl = document.getElementById('scoreVal');
-        const timeEl = document.getElementById('timeVal');
-        const speedSlider = document.getElementById('speedSlider'); 
-        const speedDisplay = document.getElementById('speedDisplay'); 
+        const hudLeft = document.getElementById('hud-left');
+        const hudRight = document.getElementById('hud-right');
         const resultScoreEl = document.getElementById('result-score');
-        const resultLevelEl = document.getElementById('result-level');
+        const resultDetailEl = document.getElementById('result-detail');
 
         let width, height, courtTop, courtBottom;
+        let gameMode = 'random'; // random, figure8, depth, badminton, measure
         let score = 0;
         let timeLeft = 30;
         let gameActive = false;
         let targets = [];
         let gameLoopId;
         let timerId;
-        let currentSpeed = 4;
         let frameCount = 0;
-        const baseShuttleSize = 25; // シャトルの基準サイズ
+        
+        // 測定モード用変数
+        let measureSpeed = 1; // 現在の速度レベル
+        let missCount = 0;    // ミス回数
+        const MAX_MISS = 3;   // 3回ミスで終了
 
         function resize() {
             width = window.innerWidth;
             height = window.innerHeight;
             canvas.width = width;
             canvas.height = height;
-            // コートの描画領域（CSSの背景に合わせる）
             courtTop = height * 0.1;
             courtBottom = height * 0.9;
         }
         window.addEventListener('resize', resize);
         resize();
 
-        function updateSpeedLabel() {
-            speedDisplay.innerText = speedSlider.value;
-        }
-
-        function startGame() {
-            currentSpeed = parseInt(speedSlider.value);
+        // ■ ゲーム開始
+        function startGame(mode) {
+            gameMode = mode;
             menuScreen.style.display = 'none';
             resultScreen.style.display = 'none';
             gameContainer.style.display = 'block';
             
             score = 0;
-            timeLeft = 30;
             frameCount = 0;
-            scoreEl.innerText = score;
-            timeEl.innerText = timeLeft;
-            gameActive = true;
             targets = [];
             
-            spawnShuttle(); 
+            // モード別初期設定
+            if (gameMode === 'badminton') {
+                timeLeft = 30;
+                hudLeft.innerText = "Hits: 0";
+                hudRight.innerText = "Time: 30";
+                spawnShuttle();
+                startTimer();
+            } else if (gameMode === 'measure') {
+                // 測定モード初期化
+                timeLeft = 999; // 時間制限なし（ミスで終了）
+                measureSpeed = 2; // 初期スピード
+                missCount = 0;
+                hudLeft.innerText = `Speed: ${measureSpeed}`;
+                hudRight.innerText = `Life: ${MAX_MISS - missCount}`;
+                spawnShuttle(); // 測定もシャトルで行う
+                // タイマーは回さない
+            } else {
+                // 基礎トレモード
+                timeLeft = 30;
+                hudLeft.innerText = "Score: 0";
+                hudRight.innerText = "Time: 30";
+                if(gameMode === 'figure8') {
+                    targets.push({ x: width/2, y: height/2, r: 30, color: '#00FF7F' });
+                } else {
+                    spawnBall();
+                }
+                startTimer();
+            }
 
+            gameActive = true;
+            update();
+        }
+
+        function startTimer() {
             clearInterval(timerId);
             timerId = setInterval(() => {
                 timeLeft--;
-                timeEl.innerText = timeLeft;
+                hudRight.innerText = `Time: ${timeLeft}`;
                 if (timeLeft <= 0) endGame();
             }, 1000);
-
-            update();
         }
 
         function backToMenu() {
@@ -160,176 +188,248 @@
             menuScreen.style.display = 'flex';
         }
 
-        // ■ ゲーム終了＆診断ロジック
         function endGame() {
             gameActive = false;
             clearInterval(timerId);
             cancelAnimationFrame(gameLoopId);
             
-            resultScoreEl.innerText = score;
-            
-            // ★ 動体視力レベル診断 ★
-            // スピードレベルとヒット数を掛け合わせてスコア化
-            const diagnosticScore = score * currentSpeed;
-            let levelMsg = "";
-            let levelColor = "white";
+            let msg = "Time Up!";
+            let detail = "";
+            let finalScoreDisplay = score;
 
-            if (diagnosticScore >= 250) {
-                levelMsg = "神の目！<br>アスリート級";
-                levelColor = "#FFD700"; // Gold
-            } else if (diagnosticScore >= 180) {
-                levelMsg = "すごい！<br>上級者レベル";
-                levelColor = "#00FF7F"; // SpringGreen
-            } else if (diagnosticScore >= 100) {
-                levelMsg = "ナイス！<br>中級者レベル";
-                levelColor = "cyan";
-            } else if (diagnosticScore >= 50) {
-                levelMsg = "まずまず<br>初級者レベル";
-                levelColor = "white";
+            if (gameMode === 'measure') {
+                msg = "測定終了";
+                finalScoreDisplay = `MAX Speed: ${measureSpeed}`;
+                
+                // 測定結果の判定
+                if (measureSpeed >= 20) detail = "判定: 神の目 (God)";
+                else if (measureSpeed >= 15) detail = "判定: プロ級 (Pro)";
+                else if (measureSpeed >= 10) detail = "判定: 上級者 (Advanced)";
+                else if (measureSpeed >= 6) detail = "判定: 普通 (Normal)";
+                else detail = "判定: 要特訓 (Beginner)";
+                
+                detail += `<br>Hit Count: ${score}`;
+            } else if (gameMode === 'badminton') {
+                msg = "Training Finish!";
+                detail = `Hits: ${score}`;
             } else {
-                levelMsg = "もっと鍛えよう！<br>ビギナーレベル";
-                levelColor = "#ccc";
+                msg = "Finish!";
+                detail = `Score: ${score}`;
             }
-            
-            resultLevelEl.innerHTML = levelMsg;
-            resultLevelEl.style.color = levelColor;
+
+            document.getElementById('result-msg').innerText = msg;
+            resultScoreEl.innerText = finalScoreDisplay;
+            resultDetailEl.innerHTML = detail;
             resultScreen.style.display = 'flex';
         }
 
-        function spawnShuttle() {
-            const shotType = Math.floor(Math.random() * 3);
-            const startX = Math.random() * (width - baseShuttleSize*2) + baseShuttleSize;
-            const startY = courtTop - 50; // コート奥の画面外から
-
-            let speedBase = currentSpeed; 
-            let targetY = 0; 
-
-            if (shotType === 0) { // スマッシュ
-                speedBase *= 1.8; 
-                targetY = courtBottom * 0.9; // コート奥深くまで
-            } else if (shotType === 1) { // ドロップ
-                speedBase *= 0.8; 
-                targetY = (courtTop + courtBottom) / 2; // コート中央
-            } else { // ヘアピン
-                speedBase *= 0.5; 
-                targetY = courtTop + (courtBottom - courtTop) * 0.2; // ネット際
-            }
+        // ■ スポーン処理（ボール）
+        function spawnBall() {
+            const r = 30;
+            const x = Math.random() * (width - r * 2) + r;
+            const y = Math.random() * (height - r * 2) + r;
+            
+            let speed = 5; // 基礎スピード
+            if (gameMode === 'depth') speed = 4;
 
             targets.push({
-                x: startX,
-                y: startY,
-                baseR: baseShuttleSize,
-                currentR: baseShuttleSize * 0.5, // 最初は小さく
-                targetY: targetY,
-                speed: speedBase * (height / 800),
-                type: shotType
+                x: x, y: y, r: r, baseR: r,
+                vx: (Math.random() - 0.5) * speed * 2,
+                vy: (Math.random() - 0.5) * speed * 2,
+                color: '#00FF7F',
+                depthPhase: Math.random() * Math.PI * 2,
+                type: 'ball'
             });
         }
 
-        // ■ リアルなコート描画
-        function drawCourt() {
-            ctx.strokeStyle = "white";
-            ctx.lineWidth = 3;
-            
-            // ネット位置
-            const netY = courtTop + (courtBottom - courtTop) * 0.3;
-            // サービスライン位置
-            const serviceLineY = courtTop + (courtBottom - courtTop) * 0.85;
+        // ■ スポーン処理（シャトル）
+        function spawnShuttle() {
+            const baseSize = 25;
+            const startX = Math.random() * (width - baseSize*2) + baseSize;
+            const startY = -50; // 画面外上
 
-            // 外枠
-            ctx.strokeRect(10, courtTop, width-20, courtBottom - courtTop);
+            let speedVal = 0;
+            let targetY = 0;
+            let shotType = 0; // 0:Smash, 1:Drop, 2:Hairpin
 
-            // ネット
-            ctx.beginPath(); ctx.moveTo(10, netY); ctx.lineTo(width-10, netY); ctx.stroke();
-            // サービスライン
-            ctx.beginPath(); ctx.moveTo(10, serviceLineY); ctx.lineTo(width-10, serviceLineY); ctx.stroke();
-            // センターライン
-            ctx.beginPath(); ctx.moveTo(width/2, netY); ctx.lineTo(width/2, serviceLineY); ctx.stroke();
-            
-            // ネットの網目
-            ctx.lineWidth = 1; ctx.strokeStyle = "rgba(255,255,255,0.4)";
-            for(let i=10; i<width-10; i+=15) {
-                ctx.beginPath(); ctx.moveTo(i, netY-8); ctx.lineTo(i, netY+8); ctx.stroke();
+            if (gameMode === 'measure') {
+                // 測定モード：スピードはレベル依存
+                speedVal = measureSpeed;
+                targetY = height + 50; // 下まで突き抜ける
+                shotType = 0; // 常にスマッシュ軌道
+            } else {
+                // バドミントンモード：ランダム
+                speedVal = 8; // デフォルト高め
+                shotType = Math.floor(Math.random() * 3);
+                if (shotType === 0) { speedVal *= 1.8; targetY = height * 0.9; }
+                else if (shotType === 1) { speedVal *= 0.8; targetY = height * 0.5; }
+                else { speedVal *= 0.6; targetY = height * 0.35; }
             }
+
+            targets.push({
+                x: startX, y: startY,
+                baseR: baseSize, currentR: baseSize,
+                targetY: targetY,
+                speed: speedVal * (height / 800),
+                type: 'shuttle',
+                shotType: shotType
+            });
         }
 
-        // ■ リアルなシャトル描画（テニスボール卒業！）
-        function drawShuttle(x, y, r) {
-            ctx.save();
-            ctx.translate(x, y);
-            // シャトルの向き（常に下向き）
-            ctx.rotate(Math.PI); 
-
-            // 羽根部分（扇形）
-            ctx.beginPath();
-            ctx.moveTo(0, 0);
-            ctx.arc(0, 0, r * 1.8, -Math.PI / 6, Math.PI / 6);
-            ctx.closePath();
-            ctx.fillStyle = "rgba(255, 255, 255, 0.9)";
-            ctx.fill();
-            // 羽根の軸（線）
-            ctx.strokeStyle = "#ddd"; ctx.lineWidth = 2;
-            ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(r*1.6, 0); ctx.stroke();
-            ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(r*1.5, r*0.5); ctx.stroke();
-            ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(r*1.5, -r*0.5); ctx.stroke();
-
-            // コルク部分（半円）
-            ctx.beginPath();
-            ctx.arc(0, 0, r * 0.6, 0, Math.PI * 2);
-            ctx.fillStyle = "#FFD700"; // コルク色
-            ctx.fill();
-            ctx.strokeStyle = "#DAA520"; ctx.lineWidth = 2; ctx.stroke();
-
-            ctx.restore();
-        }
-
+        // ■ 描画ループ
         function update() {
             if (!gameActive) return;
-            ctx.clearRect(0, 0, width, height);
-            drawCourt();
+            
+            // 背景描画
+            if (gameMode === 'badminton' || gameMode === 'measure') {
+                // コート描画
+                ctx.fillStyle = (gameMode === 'measure') ? "#330000" : "#2E8B57"; // 測定は赤黒背景
+                ctx.fillRect(0,0,width,height);
+                drawCourt();
+            } else {
+                // 通常背景
+                ctx.fillStyle = "#202020";
+                ctx.clearRect(0, 0, width, height);
+                ctx.fillRect(0,0,width,height);
+            }
+
             frameCount++;
 
-            let spawnRate = Math.max(20, 90 - (currentSpeed * 6));
-            if (frameCount % spawnRate === 0) spawnShuttle();
+            // ■ スポーン管理
+            if (gameMode === 'random' || gameMode === 'depth') {
+                // 減ったら足す
+                /* ヒット時に足すのでここでは何もしないが、初期が0なら足す */
+                 if(targets.length === 0) spawnBall();
+            } else if (gameMode === 'badminton') {
+                 // 定期的に足す
+                 if (frameCount % 40 === 0) spawnShuttle();
+            }
+            // ※ 測定モードは「ヒットした瞬間」に次を出すのでここでは出さない
 
+            // ■ 移動と描画
             for (let i = targets.length - 1; i >= 0; i--) {
                 const t = targets[i];
-                t.y += t.speed;
 
-                // ★ 高さ（遠近）の計算 ★
-                // 画面上部(courtTop)にいるときは0.5倍、下部(courtBottom)に来ると1.5倍の大きさになる
-                const progress = (t.y - courtTop) / (courtBottom - courtTop);
-                const scale = 0.5 + Math.max(0, Math.min(1, progress)) * 1.0;
-                t.currentR = t.baseR * scale;
+                if (t.type === 'ball') {
+                    // === ボールの動き ===
+                    if (gameMode === 'figure8') {
+                         const centerX = width/2; const centerY = height/2;
+                         t.x = centerX + Math.cos(frameCount * 0.05) * (width*0.35);
+                         t.y = centerY + Math.sin(frameCount * 0.1) * (height*0.2);
+                    } else {
+                        t.x += t.vx; t.y += t.vy;
+                        if (t.x-t.r<0 || t.x+t.r>width) t.vx *= -1;
+                        if (t.y-t.r<0 || t.y+t.r>height) t.vy *= -1;
+                        
+                        if (gameMode === 'depth') {
+                            t.r = t.baseR * (1 + 0.5 * Math.sin(frameCount*0.05 + t.depthPhase));
+                        }
+                    }
+                    // ボール描画
+                    ctx.beginPath(); ctx.arc(t.x, t.y, t.r, 0, Math.PI*2);
+                    ctx.fillStyle = t.color; ctx.fill();
 
-                // リアルシャトル描画関数を呼び出す
-                drawShuttle(t.x, t.y, t.currentR);
+                } else if (t.type === 'shuttle') {
+                    // === シャトルの動き ===
+                    t.y += t.speed;
+                    
+                    // 遠近計算
+                    let progress = 0;
+                    if(courtBottom && courtTop) {
+                         progress = (t.y - courtTop) / (courtBottom - courtTop);
+                    }
+                    const scale = 0.5 + Math.max(0, Math.min(1, progress)) * 1.0;
+                    t.currentR = t.baseR * scale;
 
-                if (t.y > height + 100) targets.splice(i, 1);
+                    drawRealShuttle(t.x, t.y, t.currentR);
+
+                    // 画面外判定
+                    if (t.y > height + 50) {
+                        targets.splice(i, 1);
+                        if (gameMode === 'measure') {
+                            // 測定モードで見逃し＝ミス
+                            missCount++;
+                            hudRight.innerText = `Life: ${MAX_MISS - missCount}`;
+                            if (missCount >= MAX_MISS) endGame();
+                            else spawnShuttle(); // 次の球
+                        }
+                    }
+                }
             }
             gameLoopId = requestAnimationFrame(update);
         }
 
+        function drawCourt() {
+            ctx.strokeStyle = "rgba(255,255,255,0.6)"; ctx.lineWidth = 2;
+            ctx.strokeRect(10, courtTop, width-20, courtBottom-courtTop);
+            const netY = courtTop + (courtBottom-courtTop)*0.3;
+            ctx.beginPath(); ctx.moveTo(10, netY); ctx.lineTo(width-10, netY); ctx.stroke();
+        }
+
+        function drawRealShuttle(x, y, r) {
+            ctx.save(); ctx.translate(x, y); ctx.rotate(Math.PI);
+            ctx.beginPath(); ctx.moveTo(0,0); ctx.arc(0,0, r*1.8, -Math.PI/6, Math.PI/6);
+            ctx.closePath(); ctx.fillStyle = "rgba(255,255,255,0.9)"; ctx.fill();
+            ctx.beginPath(); ctx.arc(0,0, r*0.6, 0, Math.PI*2);
+            ctx.fillStyle = (gameMode==='measure') ? "#FF4500" : "#FFD700"; ctx.fill();
+            ctx.restore();
+        }
+
+        // ■ 入力判定
         function handleInput(e) {
             if (!gameActive) return;
             e.preventDefault();
-            const touches = e.changedTouches || [e]; 
+            
+            // 測定モード用の「空振り判定」
+            let hitSomething = false;
+
+            const touches = e.changedTouches || [e];
             for (let i = 0; i < touches.length; i++) {
                 const tx = touches[i].clientX;
                 const ty = touches[i].clientY;
+
                 for (let j = targets.length - 1; j >= 0; j--) {
                     const t = targets[j];
-                    // 判定も見た目の大きさに合わせる
-                    const dist = Math.hypot(t.x - tx, t.y - ty);
-                    if (dist < t.currentR + 30) { 
+                    const radius = (t.type === 'shuttle') ? t.currentR : t.r;
+                    // 測定モードは判定厳しめ(+5)、他は少し甘め(+20)
+                    const margin = (gameMode === 'measure') ? 5 : 20; 
+
+                    if (Math.hypot(t.x - tx, t.y - ty) < radius + margin) {
+                        // HIT!
                         score++;
-                        scoreEl.innerText = score;
-                        targets.splice(j, 1);
+                        hitSomething = true;
+                        
+                        if (gameMode === 'measure') {
+                            hudLeft.innerText = `Speed: ${measureSpeed} (Hits:${score})`;
+                            targets.splice(j, 1);
+                            // ヒットするたびに加速
+                            measureSpeed += 0.5;
+                            // 即次を出す
+                            spawnShuttle();
+                        } else if (gameMode === 'random' || gameMode === 'depth') {
+                            hudLeft.innerText = `Score: ${score}`;
+                            targets.splice(j, 1);
+                            spawnBall();
+                            if(score % 5 === 0) spawnBall();
+                        } else if (gameMode === 'badminton') {
+                             hudLeft.innerText = `Hits: ${score}`;
+                             targets.splice(j, 1);
+                             // エフェクトなどあればここで
+                        }
                         break;
                     }
                 }
             }
+
+            // 測定モードで空振りしたらミス
+            if (gameMode === 'measure' && !hitSomething) {
+                // 画面内のどこかをタップしたのに何も当たらなかった
+                missCount++;
+                hudRight.innerText = `Life: ${MAX_MISS - missCount}`;
+                if (missCount >= MAX_MISS) endGame();
+            }
         }
+
         window.addEventListener('mousedown', handleInput);
         window.addEventListener('touchstart', handleInput, {passive: false});
     </script>
