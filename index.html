@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>動体視力トレ V17 (RHYTHM)</title>
+    <title>動体視力トレ V18 (REBOOT)</title>
     <style>
         body {
             margin: 0; overflow: hidden;
@@ -38,7 +38,7 @@
         #feedback-msg {
             position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%);
             font-size: 40px; font-weight: 900; opacity: 0; pointer-events: none;
-            transition: opacity 0.2s; text-shadow: 2px 2px 0 #000; z-index: 20; white-space: nowrap;
+            transition: opacity 0.1s; text-shadow: 2px 2px 0 #000; z-index: 20; white-space: nowrap;
         }
         #result-screen {
             display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
@@ -52,12 +52,11 @@
 <body>
 
     <div id="menu-screen">
-        <h1>動体視力トレ V17<br>One Shot Rhythm</h1>
-        <div class="label">■ リアル・トレーニング</div>
-        <div class="btn" style="background-color:#4682B4; border-color:#87CEEB;" onclick="startGame('physics')">⑧ 4点ノック (1球交代)</div>
+        <h1>動体視力トレ V18<br>System Reboot</h1>
+        <div class="label">■ ノック練習</div>
+        <div class="btn" style="background-color:#4682B4; border-color:#87CEEB;" onclick="startGame('rally')">⑧ 4点ノック (無限ループ)</div>
         <div class="label">■ 測定</div>
         <div class="btn" style="background-color:#b22222; border-color:#ff6347;" onclick="startGame('measure')">⑤ 動体視力測定</div>
-        <div class="btn" onclick="startGame('random')">①〜③ 基礎モード</div>
     </div>
 
     <div id="game-container">
@@ -88,20 +87,17 @@
 
         let width, height;
         let courtX, courtY, courtW, courtH; 
-        let gameMode = 'random'; 
+        let gameMode = 'rally'; 
         let score = 0;
         let timeLeft = 60;
         let gameActive = false;
-        let targets = [];
+        let targets = []; // ここには常に最大1個しか入れない
         let effects = [];
         let gameLoopId;
         let timerId;
-        let measureSpeed = 1; 
-        let missCount = 0;    
-        const MAX_MISS = 3;
+        let spawnTimer = 0; // 次のスポーンまでのカウントダウン
 
-        // V17: 次のボールが出るまでのクールタイム管理
-        let spawnCoolDown = 0;
+        // 物理定数
         const GRAVITY = 0.45; 
         
         function resize() {
@@ -109,7 +105,7 @@
             height = window.innerHeight;
             canvas.width = width;
             canvas.height = height;
-            courtW = width * 0.9;
+            courtW = width * 0.92;
             courtH = height * 0.75;
             courtX = (width - courtW) / 2;
             courtY = (height - courtH) / 2 + height * 0.05;
@@ -126,26 +122,19 @@
             score = 0;
             targets = [];
             effects = [];
-            spawnCoolDown = 30; // 開始時のタメ
+            spawnTimer = 10; // すぐ出す
 
-            if (gameMode === 'physics') {
+            if (gameMode === 'rally') {
                 timeLeft = 60; 
                 hudLeft.innerText = "Score: 0";
                 hudRight.innerText = "Time: 60";
-                startTimer();
-            } else if (gameMode === 'measure') {
-                timeLeft = 999; 
-                measureSpeed = 2; missCount = 0;
-                hudLeft.innerText = `Speed: ${measureSpeed}`;
-                hudRight.innerText = `Life: ${MAX_MISS}`;
             } else {
-                timeLeft = 30;
-                hudLeft.innerText = "Score: 0";
-                hudRight.innerText = "Time: 30";
-                spawnBall();
-                startTimer();
+                timeLeft = 999;
+                hudLeft.innerText = "Speed: 1";
+                hudRight.innerText = "Life: 3";
             }
-
+            
+            startTimer();
             gameActive = true;
             update();
         }
@@ -153,9 +142,11 @@
         function startTimer() {
             clearInterval(timerId);
             timerId = setInterval(() => {
-                timeLeft--;
-                hudRight.innerText = `Time: ${timeLeft}`;
-                if (timeLeft <= 0) endGame();
+                if (gameMode === 'rally') {
+                    timeLeft--;
+                    hudRight.innerText = `Time: ${timeLeft}`;
+                    if (timeLeft <= 0) endGame();
+                }
             }, 1000);
         }
 
@@ -169,15 +160,15 @@
             feedbackEl.innerText = text;
             feedbackEl.style.color = color;
             feedbackEl.style.opacity = 1;
-            setTimeout(() => { feedbackEl.style.opacity = 0; }, 800);
+            setTimeout(() => { feedbackEl.style.opacity = 0; }, 500);
         }
 
         function endGame() {
             gameActive = false;
             clearInterval(timerId);
             cancelAnimationFrame(gameLoopId);
-            document.getElementById('result-msg').innerText = (gameMode==='measure') ? "測定終了" : "Finish!";
-            resultScoreEl.innerText = (gameMode==='measure') ? measureSpeed : score;
+            document.getElementById('result-msg').innerText = "Finish!";
+            resultScoreEl.innerText = score;
             resultScreen.style.display = 'flex';
         }
 
@@ -203,68 +194,57 @@
             ctx.restore();
         }
 
-        function spawnBall() {
-            const r = 30;
-            const x = Math.random() * (width - r * 2) + r;
-            const y = Math.random() * (height - r * 2) + r;
-            targets.push({
-                x: x, y: y, r: r,
-                vx: (Math.random() - 0.5) * 10, vy: (Math.random() - 0.5) * 10,
-                color: '#00FF7F', type: 'ball'
-            });
-        }
-        
-        function spawnShuttleMeasure() {
-             const baseSize = 25;
-             const x = Math.random() * (courtW) + courtX;
-             targets.push({
-                 x: x, y: -50, z: 0,
-                 vx: 0, vy: measureSpeed * (height/600) + 2, vz: 0,
-                 baseR: baseSize, type: 'shuttle_simple'
-             });
-        }
-
-        // --- ★ V17: ワン・ショット・システム ★ ---
-        function spawnShuttlePhysics() {
+        // --- コアロジック: 球生成 ---
+        function spawnShuttle() {
             const startX = width / 2;
             const startY = courtY - 50; 
             
-            // 4点固定 + サイド2点
-            const corners = [
-                { x: courtX + 20, y: courtY + courtH - 20 }, // 左奥
-                { x: courtX + courtW - 20, y: courtY + courtH - 20 }, // 右奥
-                { x: courtX + 20, y: courtY + courtH * 0.15 }, // 左前
-                { x: courtX + courtW - 20, y: courtY + courtH * 0.15 }, // 右前
-                { x: courtX + 10, y: courtY + courtH * 0.5 }, // 左サイド
-                { x: courtX + courtW - 10, y: courtY + courtH * 0.5 } // 右サイド
-            ];
-
-            const idx = Math.floor(Math.random() * 6);
-            let targetPos = corners[idx];
-            let shotType = (idx <= 1) ? 0 : (idx <= 3) ? 2 : 1; // 0:クリア, 2:ドロップ, 1:スマッシュ
+            // 4点固定 (ランダムなズレなし)
+            // 0:左奥, 1:右奥, 2:左前, 3:右前
+            const posId = Math.floor(Math.random() * 4);
             
-            let isOut = Math.random() < 0.25; 
-            if (isOut) {
-                // アウトならターゲットをコート外へずらす
-                if (targetPos.x < width/2) targetPos.x -= 50; else targetPos.x += 50;
-                if (targetPos.y > courtY + courtH/2) targetPos.y += 50;
+            let tx, ty, type; // type 0:Clear, 1:Smash, 2:Drop
+
+            if (posId === 0) { // 左奥
+                tx = courtX + 30; ty = courtY + courtH - 30; type = 0;
+            } else if (posId === 1) { // 右奥
+                tx = courtX + courtW - 30; ty = courtY + courtH - 30; type = 0;
+            } else if (posId === 2) { // 左前
+                tx = courtX + 30; ty = courtY + courtH * 0.2; type = 2;
+            } else { // 右前
+                tx = courtX + courtW - 30; ty = courtY + courtH * 0.2; type = 2;
+            }
+
+            // スマッシュを混ぜる(20%) -> サイドラインへ
+            if (Math.random() < 0.2) {
+                type = 1;
+                ty = courtY + courtH * 0.7; // 中盤
+                tx = (Math.random() < 0.5) ? courtX + 10 : courtX + courtW - 10;
+            }
+
+            // アウト球 (20%)
+            let isOut = false;
+            if (Math.random() < 0.2) {
+                isOut = true;
+                if (type === 0) ty += 60; // バックアウト
+                else tx += (tx < width/2) ? -60 : 60; // サイドアウト
             }
 
             // 物理パラメータ
-            let flightTime = 0; let initialVz = 0;
-            if (shotType === 0) { flightTime = 120; initialVz = 15; }
-            else if (shotType === 1) { flightTime = 40; initialVz = 2.5; }
-            else { flightTime = 100; initialVz = 10; }
+            let time = 0; let vz = 0;
+            if (type === 0) { time = 120; vz = 15; } // ハイクリア
+            else if (type === 1) { time = 35; vz = 3; } // スマッシュ
+            else { time = 90; vz = 10; } // ドロップ
 
-            const vx = (targetPos.x - startX) / flightTime;
-            const vy = (targetPos.y - startY) / flightTime;
+            const vx = (tx - startX) / time;
+            const vy = (ty - startY) / time;
 
             targets.push({
                 x: startX, y: startY, z: 0,
-                vx: vx, vy: vy, vz: initialVz,
-                baseR: 25, type: 'shuttle_physics',
-                isOut: isOut, landingY: targetPos.y,
-                landed: false, shotType: shotType
+                vx: vx, vy: vy, vz: vz,
+                baseR: 25, type: type,
+                isOut: isOut, landed: false,
+                life: 200 // 安全装置：200フレーム経過したら強制消去
             });
         }
 
@@ -274,85 +254,69 @@
             ctx.fillStyle = "#202020"; ctx.fillRect(0,0,width,height);
 
             // コート描画
-            if (gameMode === 'physics' || gameMode === 'measure') {
-                ctx.fillStyle = "#2E8B57"; ctx.fillRect(courtX, courtY, courtW, courtH);
-                ctx.strokeStyle = "white"; ctx.lineWidth = 3;
-                ctx.strokeRect(courtX, courtY, courtW, courtH); 
-                const netY = courtY + courtH * 0.3; 
-                ctx.beginPath(); ctx.moveTo(courtX, netY); ctx.lineTo(courtX+courtW, netY); ctx.stroke();
-                // センター
-                ctx.lineWidth=1;
-                ctx.beginPath(); ctx.moveTo(courtX+courtW/2, courtY); ctx.lineTo(courtX+courtW/2, courtY+courtH); ctx.stroke();
-            }
+            ctx.fillStyle = "#2E8B57"; ctx.fillRect(courtX, courtY, courtW, courtH);
+            ctx.strokeStyle = "white"; ctx.lineWidth = 3;
+            ctx.strokeRect(courtX, courtY, courtW, courtH); 
+            const netY = courtY + courtH * 0.3; 
+            ctx.beginPath(); ctx.moveTo(courtX, netY); ctx.lineTo(courtX+courtW, netY); ctx.stroke();
+            // センター
+            ctx.lineWidth=1;
+            ctx.beginPath(); ctx.moveTo(courtX+courtW/2, courtY); ctx.lineTo(courtX+courtW/2, courtY+courtH); ctx.stroke();
 
-            // ★ スポーン管理 (これがV17のキモ) ★
-            if (gameMode === 'random') {
-                if(targets.length === 0) spawnBall();
-            } 
-            else if (gameMode === 'measure') {
-                if(targets.length === 0) spawnShuttleMeasure();
-            }
-            else if (gameMode === 'physics') {
-                // 画面にターゲットがなく、クールダウンも終わっていたら次を出す
-                if (targets.length === 0) {
-                    if (spawnCoolDown > 0) {
-                        spawnCoolDown--;
-                    } else {
-                        spawnShuttlePhysics();
-                        spawnCoolDown = 30; // 次の球までの間隔（フレーム数）
-                    }
-                }
-            }
-            
+            // エフェクト
             updateEffects();
             drawEffects();
 
-            // ターゲット処理
+            // --- ループ管理 (絶対止まらないロジック) ---
+            if (targets.length === 0) {
+                spawnTimer--;
+                if (spawnTimer <= 0) {
+                    spawnShuttle();
+                    spawnTimer = 999; // 出したら待機状態へ
+                }
+            }
+
+            // シャトル更新
             for (let i = targets.length - 1; i >= 0; i--) {
                 const t = targets[i];
 
-                if (t.type === 'ball') {
-                    t.x += t.vx; t.y += t.vy;
-                    if (t.x<0 || t.x>width) t.vx *= -1;
-                    if (t.y<0 || t.y>height) t.vy *= -1;
-                    ctx.beginPath(); ctx.arc(t.x, t.y, t.r, 0, Math.PI*2);
-                    ctx.fillStyle = t.color; ctx.fill();
-
-                } else if (t.type === 'shuttle_simple') {
-                    t.y += t.vy;
-                    drawShuttleWithShadow(t.x, t.y, 0, t.baseR);
-                    if (t.y > height + 50) {
-                        missCount++; hudRight.innerText = `Life: ${MAX_MISS - missCount}`;
-                        if (missCount >= MAX_MISS) endGame(); 
-                        targets.splice(i, 1); // 消すだけで次は自動スポーン
-                    }
-
-                } else if (t.type === 'shuttle_physics') {
-                    if (!t.landed) {
-                        t.x += t.vx; t.y += t.vy; t.z += t.vz; t.vz -= GRAVITY;
-                        if (t.z <= 0) {
-                            t.z = 0; t.landed = true;
-                            if (t.y > courtY && t.y < courtY+courtH && t.x > courtX && t.x < courtX+courtW) {
-                                if (!t.isOut) showFeedback("IN...", "#aaa");
+                if (!t.landed) {
+                    t.x += t.vx; t.y += t.vy; t.z += t.vz; t.vz -= GRAVITY;
+                    
+                    // 着地判定
+                    if (t.z <= 0) {
+                        t.z = 0; t.landed = true;
+                        // インの球を落としたら「ミス」表示して即次へ
+                        if (t.y > courtY && t.y < courtY+courtH && t.x > courtX && t.x < courtX+courtW) {
+                            if (!t.isOut) {
+                                showFeedback("MISS...", "#aaa");
+                                // ★重要：ミスしても即座に消して次を出す
+                                targets.splice(i, 1);
+                                spawnTimer = 30; // 0.5秒後に次
+                                continue;
                             }
                         }
                     }
-                    drawShuttleWithShadow(t.x, t.y, t.z, t.baseR, t.landed, t.shotType);
+                }
 
-                    // 画面外または着地後しばらくしたら消える
-                    if (t.y > height + 100 || (t.landed && t.y > height)) {
-                        if (!t.landed && t.isOut) {
-                             score += 10; showFeedback("NICE WATCH!", "#00FF7F"); hudLeft.innerText = `Score: ${score}`;
-                        }
-                        // ★重要: ここで消すと、次のフレームからクールダウンが始まる
-                        targets.splice(i, 1);
+                // 描画
+                drawShuttle(t.x, t.y, t.z, t.baseR, t.landed);
+
+                // 寿命管理（画面外 or 時間切れ）
+                t.life--;
+                if (t.y > height + 50 || t.life <= 0) {
+                    if (!t.landed && t.isOut) {
+                         score += 10; showFeedback("GOOD WATCH!", "#00FF7F"); hudLeft.innerText = `Score: ${score}`;
                     }
+                    targets.splice(i, 1);
+                    spawnTimer = 20; // すぐ次
                 }
             }
+            
             gameLoopId = requestAnimationFrame(update);
         }
 
-        function drawShuttleWithShadow(x, y, z, r, landed, shotType) {
+        function drawShuttle(x, y, z, r, landed) {
             // 影
             ctx.save(); ctx.translate(x, y); ctx.scale(1, 0.3); 
             ctx.beginPath(); ctx.arc(0, 0, r * 0.8, 0, Math.PI * 2);
@@ -362,11 +326,10 @@
             const visualY = y - z; 
             const scale = 1 + (z / 100); 
             ctx.save(); ctx.translate(x, visualY); ctx.scale(scale, scale); ctx.rotate(Math.PI); 
-
+            
             const alpha = landed ? 0.5 : 0.95;
             ctx.beginPath(); ctx.moveTo(0,0); ctx.arc(0,0, r*1.6, -Math.PI/6, Math.PI/6);
             ctx.closePath(); ctx.fillStyle = `rgba(255,255,255,${alpha})`; ctx.fill();
-            
             ctx.beginPath(); ctx.arc(0,0, r*0.5, 0, Math.PI*2);
             ctx.fillStyle = landed ? "#888" : "#DAA520"; ctx.fill(); 
             ctx.restore();
@@ -383,7 +346,6 @@
 
                 for (let j = targets.length - 1; j >= 0; j--) {
                     const t = targets[j];
-                    if (t.type === 'ball') continue;
                     if (t.landed) continue; // 着地後は打てない
 
                     const visualY = t.y - t.z;
@@ -392,20 +354,17 @@
 
                     if (Math.hypot(t.x - tx, visualY - ty) < hitR) {
                         spawnEffect(t.x, visualY); 
-                        if (gameMode === 'physics') {
-                            if (t.isOut) {
-                                score -= 5; showFeedback("BAD TOUCH!", "red");
-                            } else {
-                                score += 1; showFeedback("HIT!", "cyan");
-                            }
-                            hudLeft.innerText = `Score: ${score}`;
-                            // ★ 打ったら即消す -> これで次のスポーンカウントダウンが始まる
-                            targets.splice(j, 1);
-                        } else if (gameMode === 'measure') {
-                            measureSpeed += 0.5;
-                            score++; hudLeft.innerText = `Speed: ${measureSpeed}`;
-                            targets.splice(j, 1);
+                        
+                        if (t.isOut) {
+                            score -= 5; showFeedback("BAD TOUCH!", "red");
+                        } else {
+                            score += 1; showFeedback("HIT!", "cyan");
                         }
+                        hudLeft.innerText = `Score: ${score}`;
+                        
+                        // ★ 打ったら即消す -> これで確実に次が出る
+                        targets.splice(j, 1);
+                        spawnTimer = 20; // 気持ちいい間隔で次
                         break;
                     }
                 }
