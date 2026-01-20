@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>動体視力トレ V14 (SHOT CONTROL)</title>
+    <title>動体視力トレ V15 (FOUR CORNERS)</title>
     <style>
         body {
             margin: 0; overflow: hidden;
@@ -54,9 +54,9 @@
 <body>
 
     <div id="menu-screen">
-        <h1>動体視力トレ V14<br>Shot Control</h1>
-        <div class="label">■ 物理演算ジャッジ (完成版)</div>
-        <div class="btn" style="background-color:#4682B4; border-color:#87CEEB;" onclick="startGame('physics')">⑧ スマッシュ＆クリア対応</div>
+        <h1>動体視力トレ V15<br>Four Corners</h1>
+        <div class="label">■ 物理演算ジャッジ (四隅)</div>
+        <div class="btn" style="background-color:#4682B4; border-color:#87CEEB;" onclick="startGame('physics')">⑧ 四隅を狙う配球</div>
         <div class="label">■ 従来モード</div>
         <div class="btn" style="background-color:#b22222; border-color:#ff6347;" onclick="startGame('measure')">⑤ 動体視力測定</div>
         <div class="btn" onclick="startGame('random')">①〜③ 基礎モード</div>
@@ -105,7 +105,7 @@
         let missCount = 0;    
         const MAX_MISS = 3;
 
-        const GRAVITY = 0.45; // 重力を少し強めに
+        const GRAVITY = 0.45; 
         
         function resize() {
             width = window.innerWidth;
@@ -189,7 +189,7 @@
                 detail = `Max Speed: ${measureSpeed}`;
             } else if (gameMode === 'physics') {
                 msg = "Training Finish";
-                detail = `Score: ${score}<br>(イン/アウト見極め)`;
+                detail = `Score: ${score}<br>(四隅ジャッジ)`;
             }
             document.getElementById('result-msg').innerText = msg;
             resultScoreEl.innerText = (gameMode==='measure') ? measureSpeed : score;
@@ -241,67 +241,70 @@
              });
         }
 
-        // --- ★ V14: 修正されたスポーンロジック ★ ---
+        // --- ★ V15: 四隅特化スポーンロジック ★ ---
         function spawnShuttlePhysics() {
+            // 発射位置はコート中央奥
             const startX = width / 2;
             const startY = courtY - 50; 
             
-            // 球種決定 (均等ではなく、クリアー・スマッシュを多めに)
-            // 0:クリアー(35%), 1:スマッシュ(35%), 2:ドロップ(30%)
-            const randType = Math.random();
-            let shotType = 0;
-            if (randType < 0.35) shotType = 0;
-            else if (randType < 0.7) shotType = 1;
-            else shotType = 2;
-
-            // ★ 着弾地点(Y)の制御 ★
-            // エリアを球種ごとに明確に分ける
-            let targetRatioY;
-            if (shotType === 0) { // クリアー：奥85-100%
-                targetRatioY = 0.85 + Math.random() * 0.2; // アウト含む
-            } else if (shotType === 1) { // スマッシュ：中盤〜奥 50-90%
-                targetRatioY = 0.5 + Math.random() * 0.4; 
-            } else { // ドロップ：手前 0-30%
-                targetRatioY = 0.05 + Math.random() * 0.25;
-            }
-
-            // アウト判定ロジック
-            // スマッシュやクリアーはサイドアウトやバックアウトの可能性がある
-            let isOut = false;
-            let targetX;
-            const randOut = Math.random();
+            // 四隅のターゲットエリア定義
+            // 0:左奥, 1:右奥, 2:左前, 3:右前, 4:サイドスマッシュ左, 5:サイドスマッシュ右
+            const corner = Math.floor(Math.random() * 6);
             
-            if (randOut < 0.3) { // 30%でアウト
-                isOut = true;
-                // サイドアウト判定
-                if (Math.random() < 0.5) {
-                    targetX = (Math.random() < 0.5) ? courtX - 40 : courtX + courtW + 40;
-                } else {
-                    targetX = courtX + Math.random() * courtW;
-                    // バックアウトならさらに奥へ
-                    if (shotType === 0) targetRatioY = 1.05 + Math.random() * 0.1;
-                }
+            let shotType = 0; // 0:クリア, 1:スマッシュ, 2:ドロップ
+            let targetX, targetY;
+            let isOut = Math.random() < 0.35; // 35%アウト
+
+            // コースによるショットタイプと座標の決定
+            if (corner === 0 || corner === 1) { 
+                // --- 奥の隅 (ハイクリア) ---
+                shotType = 0;
+                const side = (corner === 0) ? 'left' : 'right';
+                
+                // X座標: ライン際
+                if (side === 'left') targetX = courtX + (isOut ? -30 : 20);
+                else targetX = courtX + courtW + (isOut ? 30 : -20);
+                
+                // Y座標: バックライン際
+                // アウトなら奥へ抜ける
+                targetY = courtY + courtH * (isOut ? 1.05 : 0.95);
+
+            } else if (corner === 2 || corner === 3) {
+                // --- 前の隅 (ドロップ/ヘアピン) ---
+                shotType = 2;
+                const side = (corner === 2) ? 'left' : 'right';
+                
+                if (side === 'left') targetX = courtX + (isOut ? -20 : 30);
+                else targetX = courtX + courtW + (isOut ? 20 : -30);
+                
+                // ネット際
+                targetY = courtY + courtH * 0.15; // かなり手前
+
             } else {
-                // イン
-                targetX = courtX + Math.random() * courtW;
+                // --- サイドへのスマッシュ ---
+                shotType = 1;
+                const side = (corner === 4) ? 'left' : 'right';
+
+                if (side === 'left') targetX = courtX + (isOut ? -20 : 10); // ライン上くらいを狙う
+                else targetX = courtX + courtW + (isOut ? 20 : -10);
+
+                // スマッシュは中盤〜奥
+                targetY = courtY + courtH * (0.6 + Math.random() * 0.3);
             }
 
-            // 最終ターゲット座標計算
-            const targetY = courtY + courtH * targetRatioY;
+            // 少しランダムなズレを加える（毎回同じドットだとバレるため）
+            targetX += (Math.random() - 0.5) * 20;
 
-            // ★ 物理パラメータ設定 ★
+            // 物理パラメータ
             let flightTime = 0; 
             let initialVz = 0;
 
             if (shotType === 0) { // ハイクリア
-                flightTime = 130; 
-                initialVz = 15;   // 高く！
+                flightTime = 130; initialVz = 15;
             } else if (shotType === 1) { // スマッシュ
-                flightTime = 30;  // ★超高速！
-                initialVz = 2;    // 低空で突き刺す
+                flightTime = 35; initialVz = 2; // 超高速
             } else { // ドロップ
-                flightTime = 90; 
-                initialVz = 9;    // ふわりと
+                flightTime = 100; initialVz = 10; // ふわり
             }
 
             const vx = (targetX - startX) / flightTime;
@@ -312,8 +315,7 @@
                 vx: vx, vy: vy, vz: initialVz,
                 baseR: 25, type: 'shuttle_physics',
                 isOut: isOut, landingY: targetY,
-                landed: false,
-                shotType: shotType // デバッグやエフェクト用
+                landed: false, shotType: shotType
             });
         }
 
@@ -329,17 +331,14 @@
                 ctx.strokeRect(courtX, courtY, courtW, courtH); 
                 const netY = courtY + courtH * 0.3; // ネット
                 ctx.beginPath(); ctx.moveTo(courtX, netY); ctx.lineTo(courtX+courtW, netY); ctx.stroke();
-                // ショートサービスライン
-                const shortY = courtY + courtH * 0.3; // ネットと同じ位置だと見にくいので少し下げる場合もあるが、一旦ネット位置基準
-                // ダブルスロングサービスライン
-                const longY = courtY + courtH * 0.9;
-                ctx.lineWidth=1;
-                ctx.beginPath(); ctx.moveTo(courtX, longY); ctx.lineTo(courtX+courtW, longY); ctx.stroke();
+                // センターライン
+                ctx.lineWidth = 1;
+                ctx.beginPath(); ctx.moveTo(courtX + courtW/2, courtY); ctx.lineTo(courtX + courtW/2, courtY + courtH); ctx.stroke();
             }
 
             frameCount++;
             if (gameMode === 'random' && targets.length === 0) spawnBall();
-            else if (gameMode === 'physics' && frameCount % 50 === 0) spawnShuttlePhysics();
+            else if (gameMode === 'physics' && frameCount % 60 === 0) spawnShuttlePhysics();
             
             updateEffects();
             drawEffects();
@@ -370,7 +369,6 @@
                         t.vz -= GRAVITY;
                         if (t.z <= 0) {
                             t.z = 0; t.landed = true;
-                            // インの球を落としたらミス表示
                             if (t.y > courtY && t.y < courtY+courtH && t.x > courtX && t.x < courtX+courtW) {
                                 if (!t.isOut) showFeedback("IN...", "#aaa");
                             }
@@ -402,12 +400,8 @@
 
             const alpha = landed ? 0.5 : 0.95;
             
-            // 羽根の色を球種で微調整（オプション：視認性アップ）
-            // スマッシュは少し鋭く見えるように（本来は白だが、ゲーム的演出として少し青みを入れる等も可。今回は白統一）
             ctx.beginPath(); ctx.moveTo(0,0); ctx.arc(0,0, r*1.6, -Math.PI/6, Math.PI/6);
             ctx.closePath(); ctx.fillStyle = `rgba(255,255,255,${alpha})`; ctx.fill();
-            
-            // コルク
             ctx.beginPath(); ctx.arc(0,0, r*0.5, 0, Math.PI*2);
             ctx.fillStyle = landed ? "#888" : "#DAA520"; ctx.fill(); 
             ctx.restore();
@@ -437,10 +431,7 @@
                             if (t.isOut) {
                                 score -= 5; showFeedback("BAD TOUCH!", "red");
                             } else {
-                                // スマッシュを返したら高得点
-                                const pts = (t.shotType === 1) ? 2 : 1;
-                                score += pts; 
-                                showFeedback(t.shotType === 1 ? "SMASH RETURN!" : "HIT", "cyan");
+                                score += 1; showFeedback("HIT!", "cyan");
                             }
                             hudLeft.innerText = `Score: ${score}`;
                             targets.splice(j, 1);
