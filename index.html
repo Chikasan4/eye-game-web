@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>動体視力トレ V10 (JUDGMENT)</title>
+    <title>動体視力トレ V11 (REAL TRAJECTORY)</title>
     <style>
         body {
             margin: 0; overflow: hidden;
@@ -20,7 +20,6 @@
         }
         .hud { font-size: 18px; font-weight: bold; text-shadow: 1px 1px 2px black; }
         
-        /* メニュー画面 */
         #menu-screen {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background-color: #1a1a1a; display: flex; flex-direction: column;
@@ -40,15 +39,15 @@
         .label { color: #aaa; font-size: 14px; margin-top: 15px; margin-bottom: 5px; width: 85%; max-width: 350px; text-align: left;}
 
         .btn-badminton { background-color: #2E8B57; border-color: white; }
-        /* V10新モード用ボタン */
-        .btn-judgment { background-color: #FF8C00; border-color: #FFD700; color: #000; }
+        /* V11新モード用ボタン */
+        .btn-real { background-color: #4169E1; border-color: #00BFFF; color: #fff; }
         .btn-measure { background-color: #b22222; border-color: #ff6347; }
 
-        /* ジャッジ結果表示（NICE WATCH! など） */
+        /* ジャッジ結果表示 */
         #feedback-msg {
             position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%);
             font-size: 40px; font-weight: 900; opacity: 0; pointer-events: none;
-            transition: opacity 0.2s; text-shadow: 2px 2px 0 #000; z-index: 20;
+            transition: opacity 0.2s; text-shadow: 2px 2px 0 #000; z-index: 20; white-space: nowrap;
         }
 
         #result-screen {
@@ -64,14 +63,14 @@
 <body>
 
     <div id="menu-screen">
-        <h1>動体視力トレ V10<br>Real & Judgment</h1>
+        <h1>動体視力トレ V11<br>Real Trajectory</h1>
 
-        <div class="label">■ 脳トレ・判断力 (NEW!)</div>
-        <div class="btn btn-judgment" onclick="startGame('judgment')">⑥ ジャッジ＆フェイント</div>
+        <div class="label">■ リアル・シミュレーション (NEW!)</div>
+        <div class="btn btn-real" onclick="startGame('real')">⑦ リアル軌道 (斜め・OUT判定)</div>
 
-        <div class="label">■ 実戦・測定</div>
+        <div class="label">■ 脳トレ・測定</div>
+        <div class="btn btn-measure" onclick="startGame('judgment')">⑥ ジャッジ＆フェイント</div>
         <div class="btn btn-measure" onclick="startGame('measure')">⑤ 動体視力測定 (サドンデス)</div>
-        <div class="btn btn-badminton" onclick="startGame('badminton')">④ 実戦ノック (打つだけ)</div>
 
         <div class="label">■ 基礎トレーニング</div>
         <div class="btn" onclick="startGame('random')">①〜③ 基礎モード (ボール)</div>
@@ -105,7 +104,7 @@
         const resultDetailEl = document.getElementById('result-detail');
         const feedbackEl = document.getElementById('feedback-msg');
 
-        let width, height, courtTop, courtBottom;
+        let width, height, courtTop, courtBottom, courtLeftTop, courtRightTop, courtLeftBottom, courtRightBottom;
         let gameMode = 'random'; 
         let score = 0;
         let timeLeft = 30;
@@ -124,16 +123,22 @@
             height = window.innerHeight;
             canvas.width = width;
             canvas.height = height;
-            courtTop = height * 0.1;
+            // 台形コートの定義（パースペクティブ）
+            courtTop = height * 0.15;
             courtBottom = height * 0.9;
+            const topWidth = width * 0.5; // 奥は狭い
+            const bottomWidth = width * 0.95; // 手前は広い
+            
+            courtLeftTop = (width - topWidth) / 2;
+            courtRightTop = width - courtLeftTop;
+            courtLeftBottom = (width - bottomWidth) / 2;
+            courtRightBottom = width - courtLeftBottom;
         }
         window.addEventListener('resize', resize);
         resize();
 
         function startGame(mode) {
-            // V10: 基礎モード選択時はランダムへ飛ばす簡易処理
             if(mode === 'random') mode = 'random'; 
-
             gameMode = mode;
             menuScreen.style.display = 'none';
             resultScreen.style.display = 'none';
@@ -143,17 +148,16 @@
             frameCount = 0;
             targets = [];
             
-            // モード別初期化
-            if (gameMode === 'judgment') {
-                timeLeft = 45; // 少し長め
+            if (gameMode === 'real') {
+                timeLeft = 60; 
                 hudLeft.innerText = "Score: 0";
-                hudRight.innerText = "Time: 45";
+                hudRight.innerText = "Time: 60";
                 spawnShuttle();
                 startTimer();
-            } else if (gameMode === 'badminton') {
-                timeLeft = 30;
-                hudLeft.innerText = "Hits: 0";
-                hudRight.innerText = "Time: 30";
+            } else if (gameMode === 'judgment') {
+                timeLeft = 45; 
+                hudLeft.innerText = "Score: 0";
+                hudRight.innerText = "Time: 45";
                 spawnShuttle();
                 startTimer();
             } else if (gameMode === 'measure') {
@@ -164,7 +168,6 @@
                 hudRight.innerText = `Life: ${MAX_MISS}`;
                 spawnShuttle(); 
             } else {
-                // 基礎系（randomのみ実装）
                 timeLeft = 30;
                 hudLeft.innerText = "Score: 0";
                 hudRight.innerText = "Time: 30";
@@ -209,13 +212,13 @@
 
             if (gameMode === 'measure') {
                 msg = "測定終了";
-                finalScoreDisplay = `MAX Speed: ${measureSpeed}`;
-                if (measureSpeed >= 20) detail = "判定: 神 (God)";
-                else if (measureSpeed >= 15) detail = "判定: 上級 (Adv)";
-                else detail = "判定: 一般 (Normal)";
-            } else if (gameMode === 'judgment') {
-                msg = "Judgment Finish!";
-                detail = `Score: ${score}<br>(見極め判断力)`;
+                finalScoreDisplay = `MAX: ${measureSpeed}`;
+                if (measureSpeed >= 20) detail = "神 (God)";
+                else if (measureSpeed >= 15) detail = "上級 (Adv)";
+                else detail = "一般 (Normal)";
+            } else if (gameMode === 'real') {
+                msg = "Match Finish!";
+                detail = `Score: ${score}<br>(イン/アウト判定)`;
             } else {
                 msg = "Finish!";
                 detail = `Hits: ${score}`;
@@ -233,74 +236,100 @@
             const y = Math.random() * (height - r * 2) + r;
             targets.push({
                 x: x, y: y, r: r, baseR: r,
-                vx: (Math.random() - 0.5) * 10,
-                vy: (Math.random() - 0.5) * 10,
+                vx: (Math.random() - 0.5) * 10, vy: (Math.random() - 0.5) * 10,
                 color: '#00FF7F', type: 'ball'
             });
         }
 
         function spawnShuttle() {
             const baseSize = 25;
-            const startX = Math.random() * (width - baseSize*2) + baseSize;
+            // 常にコート中央奥から出現（よりリアルに）
+            const startX = width / 2; 
+            const startY = -30;
+
+            let isOut = false; // アウト球かどうか
+            let shotType = 0; // 0:Smash/Clear, 1:Drop/Cut, 2:Hairpin
+
+            // モードによるアウト確率
+            if (gameMode === 'real' && Math.random() < 0.35) isOut = true; 
+            if (gameMode === 'judgment' && Math.random() < 0.2) isOut = true;
+
+            // 軌道の決定（ターゲット地点）
+            // インの場合：コート内のどこか
+            // アウトの場合：ラインの外
+            let targetX, targetY;
             
-            // ジャッジモードなら「アウト球(赤)」を混ぜる (20%の確率)
-            let isOut = false;
-            if (gameMode === 'judgment' && Math.random() < 0.2) {
-                isOut = true;
+            // X方向のターゲット（左右）
+            const margin = 30; // ライン際のマージン
+            if (isOut && Math.random() < 0.6) {
+                // サイドアウト (左右どちらかに大きく外す)
+                targetX = (Math.random() > 0.5) ? -50 : width + 50;
+            } else {
+                // イン or オーバー（左右はコート内）
+                targetX = courtLeftBottom + Math.random() * (courtRightBottom - courtLeftBottom);
             }
 
-            // フェイント(速度変化)フラグ (ジャッジモードのみ)
-            let hasFeint = false;
-            if (gameMode === 'judgment' && !isOut && Math.random() < 0.3) {
-                hasFeint = true;
+            // Y方向のターゲット（前後）
+            // スマッシュ/クリアは奥、ドロップは手前
+            const rand = Math.random();
+            if (rand < 0.5) shotType = 0; // 奥
+            else if (rand < 0.8) shotType = 1; // 中
+            else shotType = 2; // 前（ヘアピン）
+
+            if (shotType === 0) {
+                targetY = courtBottom * 0.95; // ベースライン付近
+                if (isOut && targetX > 0 && targetX < width) {
+                    // サイドはインだが、バックアウトの場合
+                    targetY = height + 100; // 奥へ突き抜ける
+                }
+            } else if (shotType === 1) {
+                targetY = (courtTop + courtBottom) / 2; // 中央
+            } else {
+                targetY = courtTop + (courtBottom - courtTop) * 0.2; // ネット前
             }
 
             let speedVal = 8;
             if (gameMode === 'measure') speedVal = measureSpeed;
-            else if (gameMode === 'judgment') speedVal = 9; // 判断モードは少し速め
+            else if (gameMode === 'real') speedVal = 8.5;
 
-            // フェイント用：最初は速く、後で遅く（カット）など
-            // type: 0=通常, 1=加速, 2=減速
-            let feintType = 0; 
-            if(hasFeint) feintType = (Math.random() > 0.5) ? 1 : 2;
+            // X方向の速度成分を計算（ターゲットに向かって飛ぶ）
+            // 到達までのフレーム数概算（高さ / Y速度）
+            const distanceY = targetY - startY;
+            const speedY = speedVal * (height / 800);
+            const frames = distanceY / speedY;
+            const speedX = (targetX - startX) / frames;
 
             targets.push({
-                x: startX, y: -50,
+                x: startX, y: startY,
+                vx: speedX, vy: speedY,
                 baseR: baseSize, currentR: baseSize,
-                speed: speedVal * (height / 800),
                 type: 'shuttle',
                 isOut: isOut,
-                hasFeint: hasFeint,
-                feintType: feintType,
-                feintTriggered: false
+                shotType: shotType,
+                colorState: 'normal' // normal, hit (gold), kill (red)
             });
         }
 
         function update() {
             if (!gameActive) return;
             
-            // 背景描画
             if (gameMode === 'random') {
                 ctx.fillStyle = "#202020"; ctx.fillRect(0,0,width,height);
             } else {
-                // コート描画
-                ctx.fillStyle = (gameMode === 'measure') ? "#330000" : "#2E8B57";
-                if (gameMode === 'judgment') ctx.fillStyle = "#004400"; // 深い緑
+                ctx.fillStyle = "#2E8B57"; // コート緑
                 ctx.fillRect(0,0,width,height);
-                drawCourt();
+                drawTrapezoidCourt(); // 3D風コート
             }
 
             frameCount++;
-
-            // スポーン制御
             if (gameMode === 'random' && targets.length === 0) spawnBall();
-            else if ((gameMode === 'badminton' || gameMode === 'judgment') && frameCount % 35 === 0) spawnShuttle();
-            
-            // 移動と描画
+            else if ((gameMode === 'real' || gameMode === 'judgment') && frameCount % 40 === 0) spawnShuttle();
+
             for (let i = targets.length - 1; i >= 0; i--) {
                 const t = targets[i];
 
                 if (t.type === 'ball') {
+                    // ボール処理（省略）
                     t.x += t.vx; t.y += t.vy;
                     if (t.x<0 || t.x>width) t.vx *= -1;
                     if (t.y<0 || t.y>height) t.vy *= -1;
@@ -308,43 +337,44 @@
                     ctx.fillStyle = t.color; ctx.fill();
                 } else if (t.type === 'shuttle') {
                     
-                    // ■ フェイント処理
-                    if (t.hasFeint && !t.feintTriggered) {
-                        // 画面半分くらいに来たら速度変化
-                        if (t.y > height * 0.4) {
-                            if (t.feintType === 1) t.speed *= 1.8; // 急加速（プッシュ）
-                            else t.speed *= 0.3; // 急減速（ドロップ）
-                            t.feintTriggered = true;
-                        }
+                    t.x += t.vx;
+                    t.y += t.vy;
+                    
+                    // ■ 遠近感の計算（奥は小さく、手前は大きく）
+                    let progress = (t.y - courtTop) / (courtBottom - courtTop);
+                    // 0.4倍 〜 1.5倍まで変化
+                    t.currentR = t.baseR * (0.4 + Math.max(0, Math.min(1.2, progress)) * 1.1);
+
+                    // ■ 色の変化ロジック（タイミング通知）
+                    t.colorState = 'normal';
+                    
+                    // 1. ネット前（ヘアピン/プッシュ）チャンス -> 赤
+                    if (t.shotType === 2 && progress > 0.1 && progress < 0.4) {
+                        t.colorState = 'kill';
+                    }
+                    // 2. スマッシュ/ドライブの打点（手元） -> 金
+                    else if (progress > 0.7 && progress < 1.0) {
+                        t.colorState = 'hit';
                     }
 
-                    t.y += t.speed;
-                    
-                    // 遠近計算
-                    let progress = (t.y - courtTop) / (courtBottom - courtTop);
-                    t.currentR = t.baseR * (0.5 + Math.max(0, Math.min(1, progress)) * 1.0);
+                    drawRealShuttle(t.x, t.y, t.currentR, t.colorState);
 
-                    drawRealShuttle(t.x, t.y, t.currentR, t.isOut);
-
-                    // 画面外へ消えた時の処理
+                    // ■ 画面外（見送り）判定
                     if (t.y > height + 50) {
-                        // ジャッジモード: アウト球を見送ったら加点！
-                        if (gameMode === 'judgment') {
+                        if (gameMode === 'real') {
                             if (t.isOut) {
-                                score += 5; // 見送り成功ボーナス
+                                score += 10; // ナイスジャッジ！
+                                showFeedback("OUT!", "lime");
                                 hudLeft.innerText = `Score: ${score}`;
-                                showFeedback("WATCH!", "#00FF7F");
                             } else {
-                                // インの球を見逃したらミスではないが点にならない
-                                // (あるいは厳しくするなら減点でもよいが今回はスルー)
+                                // インを見逃した
+                                showFeedback("IN...", "#aaa");
                             }
-                        }
-                        // 測定モード: 見逃しミス
-                        else if (gameMode === 'measure') {
-                            missCount++;
-                            hudRight.innerText = `Life: ${MAX_MISS - missCount}`;
-                            if (missCount >= MAX_MISS) endGame();
-                            else spawnShuttle();
+                        } else if (gameMode === 'judgment' && t.isOut) {
+                             score += 5; showFeedback("WATCH!", "#00FF7F"); hudLeft.innerText = `Score: ${score}`;
+                        } else if (gameMode === 'measure') {
+                            missCount++; hudRight.innerText = `Life: ${MAX_MISS - missCount}`;
+                            if (missCount >= MAX_MISS) endGame(); else spawnShuttle();
                         }
                         targets.splice(i, 1);
                     }
@@ -353,25 +383,55 @@
             gameLoopId = requestAnimationFrame(update);
         }
 
-        function drawCourt() {
-            ctx.strokeStyle = "rgba(255,255,255,0.6)"; ctx.lineWidth = 2;
-            ctx.strokeRect(10, courtTop, width-20, courtBottom-courtTop);
-            const netY = courtTop + (courtBottom-courtTop)*0.3;
-            ctx.beginPath(); ctx.moveTo(10, netY); ctx.lineTo(width-10, netY); ctx.stroke();
+        function drawTrapezoidCourt() {
+            // 床（茶色）
+            ctx.fillStyle = "#8B4513";
+            ctx.fillRect(0,0,width,height);
+            // コート内（緑）- 台形描画
+            ctx.fillStyle = "#2E8B57";
+            ctx.beginPath();
+            ctx.moveTo(courtLeftTop, courtTop);
+            ctx.lineTo(courtRightTop, courtTop);
+            ctx.lineTo(courtRightBottom, courtBottom);
+            ctx.lineTo(courtLeftBottom, courtBottom);
+            ctx.closePath();
+            ctx.fill();
+
+            // ライン（白）
+            ctx.strokeStyle = "white"; ctx.lineWidth = 3;
+            ctx.beginPath();
+            // 外枠
+            ctx.moveTo(courtLeftTop, courtTop); ctx.lineTo(courtRightTop, courtTop);
+            ctx.lineTo(courtRightBottom, courtBottom); ctx.lineTo(courtLeftBottom, courtBottom);
+            ctx.lineTo(courtLeftTop, courtTop);
+            
+            // ネットライン
+            const netY = courtTop + (courtBottom - courtTop) * 0.3;
+            // ネットの幅も台形に合わせて補間
+            const netLeft = courtLeftTop + (courtLeftBottom - courtLeftTop) * 0.3;
+            const netRight = courtRightTop + (courtRightBottom - courtRightTop) * 0.3;
+            ctx.moveTo(netLeft, netY); ctx.lineTo(netRight, netY);
+            
+            // センターライン
+            ctx.moveTo(width/2, netY); ctx.lineTo(width/2, courtBottom);
+            
+            ctx.stroke();
         }
 
-        function drawRealShuttle(x, y, r, isOut) {
+        function drawRealShuttle(x, y, r, state) {
             ctx.save(); ctx.translate(x, y); ctx.rotate(Math.PI);
             
-            // アウト球は全体的に赤っぽく、インは白
-            const featherColor = isOut ? "rgba(255,100,100,0.9)" : "rgba(255,255,255,0.9)";
-            
+            // 羽根の色
+            let featherColor = "rgba(255,255,255,0.9)";
+            if (state === 'kill') featherColor = "rgba(255,50,50,0.9)"; // 赤
+            if (state === 'hit') featherColor = "rgba(255,215,0,0.9)"; // 金
+
             ctx.beginPath(); ctx.moveTo(0,0); ctx.arc(0,0, r*1.8, -Math.PI/6, Math.PI/6);
             ctx.closePath(); ctx.fillStyle = featherColor; ctx.fill();
             
+            // コルク
             ctx.beginPath(); ctx.arc(0,0, r*0.6, 0, Math.PI*2);
-            // コルクの色
-            ctx.fillStyle = isOut ? "#8B0000" : "#FFD700"; 
+            ctx.fillStyle = (state === 'kill') ? "#8B0000" : "#DAA520"; 
             ctx.fill();
             ctx.restore();
         }
@@ -389,38 +449,41 @@
                 for (let j = targets.length - 1; j >= 0; j--) {
                     const t = targets[j];
                     const radius = (t.type === 'shuttle') ? t.currentR : t.r;
-                    // ジャッジモードは判定シビア
-                    const margin = (gameMode === 'judgment' || gameMode === 'measure') ? 5 : 20;
+                    const margin = 20;
 
                     if (Math.hypot(t.x - tx, t.y - ty) < radius + margin) {
                         hitSomething = true;
 
-                        // ■ ジャッジモードの判定ロジック
-                        if (gameMode === 'judgment') {
+                        // ■ リアルモードの判定
+                        if (gameMode === 'real') {
                             if (t.isOut) {
-                                // アウト球を触ってしまった！
-                                score -= 10; // 大減点
-                                hudLeft.innerText = `Score: ${score}`;
-                                showFeedback("OUT!!", "red");
-                                // 触っても消さない（罰として残す、あるいは消してもいい）
-                                targets.splice(j, 1);
+                                // アウト球を触った！
+                                score -= 5; 
+                                showFeedback("TOUCH OUT!", "red");
                             } else {
-                                // 正しい球を打った
-                                score += 1;
-                                hudLeft.innerText = `Score: ${score}`;
-                                showFeedback("NICE", "cyan");
-                                targets.splice(j, 1);
+                                // インの球を打った！
+                                // 色が変わっているタイミングなら高得点
+                                if (t.colorState === 'hit' || t.colorState === 'kill') {
+                                    score += 2; showFeedback("NICE TIMING!", "cyan");
+                                } else {
+                                    score += 1; // 普通
+                                }
                             }
-                        } 
-                        // ■ 測定モード
-                        else if (gameMode === 'measure') {
+                            hudLeft.innerText = `Score: ${score}`;
+                            targets.splice(j, 1);
+                        }
+                        // ■ その他のモード
+                        else if (gameMode === 'judgment') {
+                            if (t.isOut) { score -= 10; showFeedback("OUT!!", "red"); }
+                            else { score++; showFeedback("NICE", "cyan"); }
+                            hudLeft.innerText = `Score: ${score}`;
+                            targets.splice(j, 1);
+                        } else if (gameMode === 'measure') {
                             hudLeft.innerText = `Speed: ${measureSpeed} (Hits:${score})`;
                             targets.splice(j, 1);
                             measureSpeed += 0.5;
                             spawnShuttle();
-                        } 
-                        // ■ その他
-                        else {
+                        } else {
                             score++;
                             hudLeft.innerText = (gameMode==='random')? `Score: ${score}` : `Hits: ${score}`;
                             targets.splice(j, 1);
