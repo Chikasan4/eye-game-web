@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>動体視力トレ V4</title>
+    <title>動体視力トレ V5</title>
     <style>
         body {
             margin: 0; overflow: hidden; background-color: #202020;
@@ -19,20 +19,29 @@
         }
         .hud { font-size: 18px; font-weight: bold; text-shadow: 1px 1px 2px black; }
 
+        /* メニュー画面 */
         #menu-screen {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background-color: #1a1a1a; display: flex; flex-direction: column;
             align-items: center; justify-content: center; z-index: 100;
         }
-        h1 { margin-bottom: 20px; font-size: 28px; text-align: center; color: #00FF7F; }
+        h1 { margin-bottom: 10px; font-size: 28px; text-align: center; color: #00FF7F; }
         
         .btn {
-            width: 80%; max-width: 300px; padding: 15px; margin: 10px;
+            width: 80%; max-width: 300px; padding: 15px; margin: 8px;
             font-size: 18px; font-weight: bold; color: white;
             background-color: #444; border: 2px solid #00FF7F;
             border-radius: 10px; cursor: pointer; text-align: center;
         }
         .btn:active { transform: scale(0.95); background-color: #555; }
+        
+        /* ▼ V5追加：設定エリアのデザイン ▼ */
+        .setting-box {
+            width: 80%; max-width: 300px;
+            background-color: #333; padding: 15px; margin: 15px 0;
+            border-radius: 10px; text-align: center;
+        }
+        input[type=range] { width: 100%; margin-top: 10px; accent-color: #00FF7F; }
         
         #result-screen {
             display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
@@ -45,7 +54,15 @@
 <body>
 
     <div id="menu-screen">
-        <h1>動体視力トレ<br>Mobile V4</h1>
+        <h1>動体視力トレ<br>Mobile V5</h1>
+        
+        <div class="setting-box">
+            <label>ボール速度: <span id="speedDisplay" style="color:#00FF7F; font-weight:bold;">4</span></label>
+            <br>
+            <input type="range" id="speedSlider" min="1" max="15" value="4" oninput="updateSpeedLabel()">
+            <div style="font-size: 12px; color: #aaa; margin-top:5px;">(左:遅い ⇔ 右:速い)</div>
+        </div>
+
         <div class="btn" onclick="startGame('random')">① ランダム (反射)</div>
         <div class="btn" onclick="startGame('figure8')">② 8の字 (追従)</div>
         <div class="btn" onclick="startGame('depth')">③ 遠近 (距離感)</div>
@@ -72,6 +89,8 @@
         const resultScreen = document.getElementById('result-screen');
         const scoreEl = document.getElementById('scoreVal');
         const timeEl = document.getElementById('timeVal');
+        const speedSlider = document.getElementById('speedSlider'); // スライダー取得
+        const speedDisplay = document.getElementById('speedDisplay'); // 数値表示用
 
         let width, height;
         let score = 0;
@@ -82,6 +101,7 @@
         let timerId;
         let currentMode = 'random';
         let frameCount = 0;
+        let currentSpeed = 4; // 現在のスピード
 
         function resize() {
             width = window.innerWidth;
@@ -92,8 +112,16 @@
         window.addEventListener('resize', resize);
         resize();
 
+        // スライダーを動かした時に数値を更新する関数
+        function updateSpeedLabel() {
+            speedDisplay.innerText = speedSlider.value;
+        }
+
         function startGame(mode) {
             currentMode = mode;
+            // スライダーの値を取得して数値に変換
+            currentSpeed = parseInt(speedSlider.value);
+
             menuScreen.style.display = 'none';
             resultScreen.style.display = 'none';
             gameContainer.style.display = 'block';
@@ -110,7 +138,7 @@
             if (currentMode === 'figure8') {
                 targets.push({ x: width/2, y: height/2, r: 30, color: '#00FF7F' });
             } else {
-                spawnTarget(); // random と depth はここで生成
+                spawnTarget(); 
             }
 
             clearInterval(timerId);
@@ -138,18 +166,19 @@
         }
 
         function spawnTarget() {
-            // モードによって動きの質を変える
-            const r = 30; // 基準サイズ
+            const r = 30; 
             const x = Math.random() * (width - r * 2) + r;
             const y = Math.random() * (height - r * 2) + r;
-            const speed = 4;
+            
+            // ★ここがポイント！スライダーの値(currentSpeed)を使う
+            const speed = currentSpeed; 
             
             targets.push({
-                x: x, y: y, r: r, baseR: r, // baseRは基準サイズ
+                x: x, y: y, r: r, baseR: r,
                 vx: (Math.random() - 0.5) * speed * 2,
                 vy: (Math.random() - 0.5) * speed * 2,
                 color: '#00FF7F',
-                depthPhase: Math.random() * Math.PI * 2 // 遠近のタイミングをずらす
+                depthPhase: Math.random() * Math.PI * 2
             });
         }
 
@@ -165,9 +194,14 @@
                 const centerY = height / 2;
                 const radiusX = width * 0.35; 
                 const radiusY = height * 0.2; 
-                const speed = 0.05;
-                t.x = centerX + Math.cos(frameCount * speed) * radiusX;
-                t.y = centerY + Math.sin(frameCount * speed * 2) * radiusY;
+                
+                // 8の字の回転速度も調整（基本0.05にスピード係数を掛ける）
+                // スピード4を基準(1.0)とする計算
+                const speedFactor = currentSpeed / 4; 
+                const rotationSpeed = 0.05 * speedFactor;
+
+                t.x = centerX + Math.cos(frameCount * rotationSpeed) * radiusX;
+                t.y = centerY + Math.sin(frameCount * rotationSpeed * 2) * radiusY;
             }
             // ■■■ ランダム & 遠近モード ■■■
             else {
@@ -177,10 +211,11 @@
                     if (t.x - t.r < 0 || t.x + t.r > width) t.vx *= -1;
                     if (t.y - t.r < 0 || t.y + t.r > height) t.vy *= -1;
 
-                    // ★ V4追加：遠近（サイズ変化）処理
+                    // 遠近処理
                     if (currentMode === 'depth') {
-                        // サイン波で大きさを変える（0.5倍 〜 1.5倍）
-                        const scale = 1 + 0.5 * Math.sin(frameCount * 0.05 + t.depthPhase);
+                        // 遠近のサイクル速度もスピードに比例させる
+                        const speedFactor = currentSpeed / 4;
+                        const scale = 1 + 0.5 * Math.sin((frameCount * 0.05 * speedFactor) + t.depthPhase);
                         t.r = t.baseR * scale;
                     }
                 });
@@ -211,15 +246,12 @@
                     const t = targets[j];
                     const dist = Math.hypot(t.x - tx, t.y - ty);
                     
-                    // 判定（見た目の大きさに合わせる）
                     if (dist < t.r + 20) { 
                         score++;
                         scoreEl.innerText = score;
-
                         if (currentMode === 'random' || currentMode === 'depth') {
                             targets.splice(j, 1);
                             spawnTarget();
-                            // 5点ごとにターゲット追加
                             if (score % 5 === 0) spawnTarget();
                         }
                         break;
