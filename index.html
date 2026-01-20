@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>動体視力トレ V3</title>
+    <title>動体視力トレ V4</title>
     <style>
         body {
             margin: 0; overflow: hidden; background-color: #202020;
@@ -19,13 +19,12 @@
         }
         .hud { font-size: 18px; font-weight: bold; text-shadow: 1px 1px 2px black; }
 
-        /* メニュー画面 */
         #menu-screen {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background-color: #1a1a1a; display: flex; flex-direction: column;
             align-items: center; justify-content: center; z-index: 100;
         }
-        h1 { margin-bottom: 30px; font-size: 28px; text-align: center; color: #00FF7F; }
+        h1 { margin-bottom: 20px; font-size: 28px; text-align: center; color: #00FF7F; }
         
         .btn {
             width: 80%; max-width: 300px; padding: 15px; margin: 10px;
@@ -35,7 +34,6 @@
         }
         .btn:active { transform: scale(0.95); background-color: #555; }
         
-        /* 終了画面 */
         #result-screen {
             display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background-color: rgba(0,0,0,0.85); flex-direction: column;
@@ -47,10 +45,10 @@
 <body>
 
     <div id="menu-screen">
-        <h1>動体視力トレ<br>Mobile V3</h1>
+        <h1>動体視力トレ<br>Mobile V4</h1>
         <div class="btn" onclick="startGame('random')">① ランダム (反射)</div>
         <div class="btn" onclick="startGame('figure8')">② 8の字 (追従)</div>
-        <div class="btn" onclick="alert('V4で実装予定です！')">③ 遠近 (Coming Soon)</div>
+        <div class="btn" onclick="startGame('depth')">③ 遠近 (距離感)</div>
     </div>
 
     <div id="game-container">
@@ -83,9 +81,8 @@
         let gameLoopId;
         let timerId;
         let currentMode = 'random';
-        let frameCount = 0; // アニメーション用カウンタ
+        let frameCount = 0;
 
-        // 画面サイズ設定
         function resize() {
             width = window.innerWidth;
             height = window.innerHeight;
@@ -109,12 +106,11 @@
             gameActive = true;
             
             targets = [];
-            // モード別初期化
-            if (currentMode === 'random') {
-                spawnTarget();
-            } else if (currentMode === 'figure8') {
-                // 8の字は最初に1個だけ作る（動かすのはupdateで）
+            // 初期スポーン
+            if (currentMode === 'figure8') {
                 targets.push({ x: width/2, y: height/2, r: 30, color: '#00FF7F' });
+            } else {
+                spawnTarget(); // random と depth はここで生成
             }
 
             clearInterval(timerId);
@@ -142,15 +138,18 @@
         }
 
         function spawnTarget() {
-            const r = 25;
+            // モードによって動きの質を変える
+            const r = 30; // 基準サイズ
             const x = Math.random() * (width - r * 2) + r;
             const y = Math.random() * (height - r * 2) + r;
             const speed = 4;
+            
             targets.push({
-                x: x, y: y, r: r,
+                x: x, y: y, r: r, baseR: r, // baseRは基準サイズ
                 vx: (Math.random() - 0.5) * speed * 2,
                 vy: (Math.random() - 0.5) * speed * 2,
-                color: '#00FF7F'
+                color: '#00FF7F',
+                depthPhase: Math.random() * Math.PI * 2 // 遠近のタイミングをずらす
             });
         }
 
@@ -159,28 +158,31 @@
             ctx.clearRect(0, 0, width, height);
             frameCount++;
 
-            // ■■■ 8の字モードの動き ■■■
+            // ■■■ 8の字モード ■■■
             if (currentMode === 'figure8') {
-                const t = targets[0]; // ターゲットは1つ
+                const t = targets[0];
                 const centerX = width / 2;
                 const centerY = height / 2;
-                // 画面幅の35%を半径に設定
                 const radiusX = width * 0.35; 
-                const radiusY = height * 0.2; // 縦は少し潰す
-                const speed = 0.05; // 回転スピード
-
-                // 8の字（レムニスケート曲線的な動き）
-                // x = cos(t), y = sin(2t) / 2
+                const radiusY = height * 0.2; 
+                const speed = 0.05;
                 t.x = centerX + Math.cos(frameCount * speed) * radiusX;
                 t.y = centerY + Math.sin(frameCount * speed * 2) * radiusY;
             }
-            // ■■■ ランダムモードの動き ■■■
-            else if (currentMode === 'random') {
+            // ■■■ ランダム & 遠近モード ■■■
+            else {
                 targets.forEach(t => {
                     t.x += t.vx;
                     t.y += t.vy;
                     if (t.x - t.r < 0 || t.x + t.r > width) t.vx *= -1;
                     if (t.y - t.r < 0 || t.y + t.r > height) t.vy *= -1;
+
+                    // ★ V4追加：遠近（サイズ変化）処理
+                    if (currentMode === 'depth') {
+                        // サイン波で大きさを変える（0.5倍 〜 1.5倍）
+                        const scale = 1 + 0.5 * Math.sin(frameCount * 0.05 + t.depthPhase);
+                        t.r = t.baseR * scale;
+                    }
                 });
             }
 
@@ -209,18 +211,16 @@
                     const t = targets[j];
                     const dist = Math.hypot(t.x - tx, t.y - ty);
                     
-                    if (dist < t.r + 20) { // 判定
+                    // 判定（見た目の大きさに合わせる）
+                    if (dist < t.r + 20) { 
                         score++;
                         scoreEl.innerText = score;
 
-                        if (currentMode === 'random') {
+                        if (currentMode === 'random' || currentMode === 'depth') {
                             targets.splice(j, 1);
                             spawnTarget();
+                            // 5点ごとにターゲット追加
                             if (score % 5 === 0) spawnTarget();
-                        } else if (currentMode === 'figure8') {
-                            // 8の字は消さずに、ヒットエフェクト（一瞬赤くなるなど）を入れたい所ですが
-                            // まずはシンプルに点数だけ加算
-                            // 連続タップ防止を入れるならここにフラグ処理
                         }
                         break;
                     }
