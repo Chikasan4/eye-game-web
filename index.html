@@ -3,76 +3,43 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>動体視力トレ V2</title>
+    <title>動体視力トレ V3</title>
     <style>
         body {
-            margin: 0;
-            overflow: hidden;
-            background-color: #202020;
-            font-family: sans-serif;
-            color: white;
-            touch-action: none;
+            margin: 0; overflow: hidden; background-color: #202020;
+            font-family: sans-serif; color: white; touch-action: none;
         }
-        /* ゲーム画面（最初は隠しておく） */
-        #game-container {
-            display: none;
-            width: 100%;
-            height: 100%;
-        }
+        #game-container { display: none; width: 100%; height: 100%; }
         canvas { display: block; }
         
-        /* UIレイヤー（スコアなど） */
         #ui-layer {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            pointer-events: none;
-            padding: 20px;
-            box-sizing: border-box;
-            display: flex;
-            justify-content: space-between;
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; padding: 20px; box-sizing: border-box;
+            display: flex; justify-content: space-between;
         }
         .hud { font-size: 18px; font-weight: bold; text-shadow: 1px 1px 2px black; }
 
-        /* メニュー画面（ここがV2の主役） */
+        /* メニュー画面 */
         #menu-screen {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background-color: #1a1a1a;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            z-index: 100;
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: #1a1a1a; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; z-index: 100;
         }
         h1 { margin-bottom: 30px; font-size: 28px; text-align: center; color: #00FF7F; }
         
-        /* ボタンのデザイン */
         .btn {
-            width: 80%;
-            max-width: 300px;
-            padding: 15px;
-            margin: 10px;
-            font-size: 18px;
-            font-weight: bold;
-            color: white;
-            background-color: #444;
-            border: 2px solid #00FF7F;
-            border-radius: 10px;
-            cursor: pointer;
-            text-align: center;
+            width: 80%; max-width: 300px; padding: 15px; margin: 10px;
+            font-size: 18px; font-weight: bold; color: white;
+            background-color: #444; border: 2px solid #00FF7F;
+            border-radius: 10px; cursor: pointer; text-align: center;
         }
         .btn:active { transform: scale(0.95); background-color: #555; }
         
         /* 終了画面 */
         #result-screen {
-            display: none;
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background-color: rgba(0,0,0,0.85);
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            z-index: 50;
+            display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.85); flex-direction: column;
+            align-items: center; justify-content: center; z-index: 50;
         }
         #result-msg { font-size: 32px; margin-bottom: 20px; text-align: center; }
     </style>
@@ -80,9 +47,9 @@
 <body>
 
     <div id="menu-screen">
-        <h1>動体視力トレ<br>Mobile V2</h1>
-        <div class="btn" onclick="startGame('random')">① ランダム (基礎)</div>
-        <div class="btn" onclick="alert('V3で実装予定です！')">② 8の字 (Coming Soon)</div>
+        <h1>動体視力トレ<br>Mobile V3</h1>
+        <div class="btn" onclick="startGame('random')">① ランダム (反射)</div>
+        <div class="btn" onclick="startGame('figure8')">② 8の字 (追従)</div>
         <div class="btn" onclick="alert('V4で実装予定です！')">③ 遠近 (Coming Soon)</div>
     </div>
 
@@ -116,6 +83,7 @@
         let gameLoopId;
         let timerId;
         let currentMode = 'random';
+        let frameCount = 0; // アニメーション用カウンタ
 
         // 画面サイズ設定
         function resize() {
@@ -127,24 +95,28 @@
         window.addEventListener('resize', resize);
         resize();
 
-        // ■ ゲーム開始処理
         function startGame(mode) {
             currentMode = mode;
-            menuScreen.style.display = 'none';      // メニュー消す
-            resultScreen.style.display = 'none';    // 結果画面消す
-            gameContainer.style.display = 'block';  // ゲーム出す
+            menuScreen.style.display = 'none';
+            resultScreen.style.display = 'none';
+            gameContainer.style.display = 'block';
             
             score = 0;
-            timeLeft = 30; // 秒数設定
+            timeLeft = 30;
+            frameCount = 0;
             scoreEl.innerText = score;
             timeEl.innerText = timeLeft;
             gameActive = true;
             
-            // モードに応じた初期化（今はランダムのみ）
             targets = [];
-            spawnTarget();
+            // モード別初期化
+            if (currentMode === 'random') {
+                spawnTarget();
+            } else if (currentMode === 'figure8') {
+                // 8の字は最初に1個だけ作る（動かすのはupdateで）
+                targets.push({ x: width/2, y: height/2, r: 30, color: '#00FF7F' });
+            }
 
-            // タイマースタート
             clearInterval(timerId);
             timerId = setInterval(() => {
                 timeLeft--;
@@ -155,14 +127,12 @@
             update();
         }
 
-        // ■ メニューに戻る
         function backToMenu() {
             resultScreen.style.display = 'none';
             gameContainer.style.display = 'none';
             menuScreen.style.display = 'flex';
         }
 
-        // ■ ゲーム終了
         function endGame() {
             gameActive = false;
             clearInterval(timerId);
@@ -171,7 +141,6 @@
             resultScreen.style.display = 'flex';
         }
 
-        // ボール生成（ランダム）
         function spawnTarget() {
             const r = 25;
             const x = Math.random() * (width - r * 2) + r;
@@ -185,18 +154,38 @@
             });
         }
 
-        // ■ メインループ
         function update() {
             if (!gameActive) return;
             ctx.clearRect(0, 0, width, height);
+            frameCount++;
 
-            // ボールの移動と描画
+            // ■■■ 8の字モードの動き ■■■
+            if (currentMode === 'figure8') {
+                const t = targets[0]; // ターゲットは1つ
+                const centerX = width / 2;
+                const centerY = height / 2;
+                // 画面幅の35%を半径に設定
+                const radiusX = width * 0.35; 
+                const radiusY = height * 0.2; // 縦は少し潰す
+                const speed = 0.05; // 回転スピード
+
+                // 8の字（レムニスケート曲線的な動き）
+                // x = cos(t), y = sin(2t) / 2
+                t.x = centerX + Math.cos(frameCount * speed) * radiusX;
+                t.y = centerY + Math.sin(frameCount * speed * 2) * radiusY;
+            }
+            // ■■■ ランダムモードの動き ■■■
+            else if (currentMode === 'random') {
+                targets.forEach(t => {
+                    t.x += t.vx;
+                    t.y += t.vy;
+                    if (t.x - t.r < 0 || t.x + t.r > width) t.vx *= -1;
+                    if (t.y - t.r < 0 || t.y + t.r > height) t.vy *= -1;
+                });
+            }
+
+            // 描画
             targets.forEach(t => {
-                t.x += t.vx;
-                t.y += t.vy;
-                if (t.x - t.r < 0 || t.x + t.r > width) t.vx *= -1;
-                if (t.y - t.r < 0 || t.y + t.r > height) t.vy *= -1;
-
                 ctx.beginPath();
                 ctx.arc(t.x, t.y, t.r, 0, Math.PI * 2);
                 ctx.fillStyle = t.color;
@@ -207,31 +196,32 @@
             gameLoopId = requestAnimationFrame(update);
         }
 
-        // ■ タッチ/クリック判定
         function handleInput(e) {
             if (!gameActive) return;
-            e.preventDefault(); // スクロール防止
-
-            // タッチ座標の取得（マルチタッチ対応）
+            e.preventDefault();
             const touches = e.changedTouches || [e]; 
             
             for (let i = 0; i < touches.length; i++) {
                 const tx = touches[i].clientX;
                 const ty = touches[i].clientY;
 
-                // 逆順ループ（手前のボールを優先）
                 for (let j = targets.length - 1; j >= 0; j--) {
                     const t = targets[j];
                     const dist = Math.hypot(t.x - tx, t.y - ty);
                     
-                    if (dist < t.r + 15) { // ちょっと判定甘めに
+                    if (dist < t.r + 20) { // 判定
                         score++;
                         scoreEl.innerText = score;
-                        targets.splice(j, 1); // 消す
-                        spawnTarget(); // 新しいのを出す
-                        
-                        // 難易度アップ（5点ごとに1個増える）
-                        if (score % 5 === 0) spawnTarget();
+
+                        if (currentMode === 'random') {
+                            targets.splice(j, 1);
+                            spawnTarget();
+                            if (score % 5 === 0) spawnTarget();
+                        } else if (currentMode === 'figure8') {
+                            // 8の字は消さずに、ヒットエフェクト（一瞬赤くなるなど）を入れたい所ですが
+                            // まずはシンプルに点数だけ加算
+                            // 連続タップ防止を入れるならここにフラグ処理
+                        }
                         break;
                     }
                 }
