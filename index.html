@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>動体視力トレ V15 (FOUR CORNERS)</title>
+    <title>動体視力トレ V16 (EXTREME CORNERS)</title>
     <style>
         body {
             margin: 0; overflow: hidden;
@@ -54,9 +54,9 @@
 <body>
 
     <div id="menu-screen">
-        <h1>動体視力トレ V15<br>Four Corners</h1>
-        <div class="label">■ 物理演算ジャッジ (四隅)</div>
-        <div class="btn" style="background-color:#4682B4; border-color:#87CEEB;" onclick="startGame('physics')">⑧ 四隅を狙う配球</div>
+        <h1>動体視力トレ V16<br>Extreme Corners</h1>
+        <div class="label">■ 物理演算ジャッジ (修正版)</div>
+        <div class="btn" style="background-color:#4682B4; border-color:#87CEEB;" onclick="startGame('physics')">⑧ 鬼の四隅 (ライン際)</div>
         <div class="label">■ 従来モード</div>
         <div class="btn" style="background-color:#b22222; border-color:#ff6347;" onclick="startGame('measure')">⑤ 動体視力測定</div>
         <div class="btn" onclick="startGame('random')">①〜③ 基礎モード</div>
@@ -112,8 +112,9 @@
             height = window.innerHeight;
             canvas.width = width;
             canvas.height = height;
-            courtW = width * 0.85;
-            courtH = height * 0.7;
+            // ★ V16: コートを横幅いっぱいに広げる
+            courtW = width * 0.92; // 92%まで拡大
+            courtH = height * 0.75;
             courtX = (width - courtW) / 2;
             courtY = (height - courtH) / 2 + height * 0.05;
         }
@@ -189,7 +190,7 @@
                 detail = `Max Speed: ${measureSpeed}`;
             } else if (gameMode === 'physics') {
                 msg = "Training Finish";
-                detail = `Score: ${score}<br>(四隅ジャッジ)`;
+                detail = `Score: ${score}<br>(ライン際の見極め)`;
             }
             document.getElementById('result-msg').innerText = msg;
             resultScoreEl.innerText = (gameMode==='measure') ? measureSpeed : score;
@@ -241,59 +242,56 @@
              });
         }
 
-        // --- ★ V15: 四隅特化スポーンロジック ★ ---
+        // --- ★ V16: 鬼の四隅スポーンロジック ★ ---
         function spawnShuttlePhysics() {
-            // 発射位置はコート中央奥
             const startX = width / 2;
             const startY = courtY - 50; 
             
-            // 四隅のターゲットエリア定義
-            // 0:左奥, 1:右奥, 2:左前, 3:右前, 4:サイドスマッシュ左, 5:サイドスマッシュ右
+            // ターゲットエリア: 0:左奥, 1:右奥, 2:左前, 3:右前, 4:左サイド, 5:右サイド
             const corner = Math.floor(Math.random() * 6);
             
-            let shotType = 0; // 0:クリア, 1:スマッシュ, 2:ドロップ
+            let shotType = 0; 
             let targetX, targetY;
-            let isOut = Math.random() < 0.35; // 35%アウト
+            // アウト確率は少し下げる（インを拾う練習重視）
+            let isOut = Math.random() < 0.25; 
 
-            // コースによるショットタイプと座標の決定
+            // ★ V16調整: ライン際ギリギリを狙う座標計算 ★
+            const padding = isOut ? -40 : 10; // インならライン内側10px、アウトなら外側40px
+
             if (corner === 0 || corner === 1) { 
                 // --- 奥の隅 (ハイクリア) ---
                 shotType = 0;
                 const side = (corner === 0) ? 'left' : 'right';
                 
-                // X座標: ライン際
-                if (side === 'left') targetX = courtX + (isOut ? -30 : 20);
-                else targetX = courtX + courtW + (isOut ? 30 : -20);
+                // X: サイドライン際
+                if (side === 'left') targetX = courtX + padding;
+                else targetX = courtX + courtW - padding;
                 
-                // Y座標: バックライン際
-                // アウトなら奥へ抜ける
-                targetY = courtY + courtH * (isOut ? 1.05 : 0.95);
+                // Y: バックライン際（インなら手前、アウトなら奥）
+                targetY = courtY + courtH + (isOut ? 30 : -10);
 
             } else if (corner === 2 || corner === 3) {
                 // --- 前の隅 (ドロップ/ヘアピン) ---
                 shotType = 2;
                 const side = (corner === 2) ? 'left' : 'right';
                 
-                if (side === 'left') targetX = courtX + (isOut ? -20 : 30);
-                else targetX = courtX + courtW + (isOut ? 20 : -30);
+                if (side === 'left') targetX = courtX + padding;
+                else targetX = courtX + courtW - padding;
                 
-                // ネット際
-                targetY = courtY + courtH * 0.15; // かなり手前
+                // ネット際ギリギリ
+                targetY = courtY + courtH * 0.15; 
 
             } else {
                 // --- サイドへのスマッシュ ---
                 shotType = 1;
                 const side = (corner === 4) ? 'left' : 'right';
 
-                if (side === 'left') targetX = courtX + (isOut ? -20 : 10); // ライン上くらいを狙う
-                else targetX = courtX + courtW + (isOut ? 20 : -10);
+                if (side === 'left') targetX = courtX + padding;
+                else targetX = courtX + courtW - padding;
 
-                // スマッシュは中盤〜奥
-                targetY = courtY + courtH * (0.6 + Math.random() * 0.3);
+                // スマッシュはハーフ〜奥
+                targetY = courtY + courtH * (0.6 + Math.random() * 0.2);
             }
-
-            // 少しランダムなズレを加える（毎回同じドットだとバレるため）
-            targetX += (Math.random() - 0.5) * 20;
 
             // 物理パラメータ
             let flightTime = 0; 
@@ -302,9 +300,9 @@
             if (shotType === 0) { // ハイクリア
                 flightTime = 130; initialVz = 15;
             } else if (shotType === 1) { // スマッシュ
-                flightTime = 35; initialVz = 2; // 超高速
+                flightTime = 38; initialVz = 2.5; // 少し見やすく
             } else { // ドロップ
-                flightTime = 100; initialVz = 10; // ふわり
+                flightTime = 100; initialVz = 10;
             }
 
             const vx = (targetX - startX) / flightTime;
@@ -338,7 +336,8 @@
 
             frameCount++;
             if (gameMode === 'random' && targets.length === 0) spawnBall();
-            else if (gameMode === 'physics' && frameCount % 60 === 0) spawnShuttlePhysics();
+            // ★ V16調整: ペースを落とす (60 -> 90)
+            else if (gameMode === 'physics' && frameCount % 90 === 0) spawnShuttlePhysics();
             
             updateEffects();
             drawEffects();
@@ -402,6 +401,7 @@
             
             ctx.beginPath(); ctx.moveTo(0,0); ctx.arc(0,0, r*1.6, -Math.PI/6, Math.PI/6);
             ctx.closePath(); ctx.fillStyle = `rgba(255,255,255,${alpha})`; ctx.fill();
+            
             ctx.beginPath(); ctx.arc(0,0, r*0.5, 0, Math.PI*2);
             ctx.fillStyle = landed ? "#888" : "#DAA520"; ctx.fill(); 
             ctx.restore();
@@ -431,7 +431,9 @@
                             if (t.isOut) {
                                 score -= 5; showFeedback("BAD TOUCH!", "red");
                             } else {
-                                score += 1; showFeedback("HIT!", "cyan");
+                                const pts = (t.shotType === 1) ? 2 : 1;
+                                score += pts; 
+                                showFeedback(t.shotType === 1 ? "SMASH!" : "HIT", "cyan");
                             }
                             hudLeft.innerText = `Score: ${score}`;
                             targets.splice(j, 1);
