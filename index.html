@@ -3,10 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>動体視力トレ V6 (Badminton)</title>
+    <title>動体視力トレ V7 (Real Badminton)</title>
     <style>
         body {
-            margin: 0; overflow: hidden; background-color: #2E8B57; /* コートの緑色 */
+            margin: 0; overflow: hidden;
+            /* リアルなコートの雰囲気をCSSグラデーションで表現 */
+            background: linear-gradient(to bottom, #8B4513 0%, #8B4513 10%, #006400 10%, #006400 90%, #8B4513 90%, #8B4513 100%);
             font-family: sans-serif; color: white; touch-action: none;
         }
         #game-container { display: none; width: 100%; height: 100%; }
@@ -44,40 +46,45 @@
         }
         input[type=range] { width: 100%; margin-top: 10px; accent-color: #00FF7F; }
         
+        /* リザルト画面（診断結果表示用） */
         #result-screen {
             display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background-color: rgba(0,0,0,0.85); flex-direction: column;
-            align-items: center; justify-content: center; z-index: 50;
+            background-color: rgba(0,0,0,0.9); flex-direction: column;
+            align-items: center; justify-content: center; z-index: 50; color: white;
         }
-        #result-msg { font-size: 32px; margin-bottom: 20px; text-align: center; }
+        #result-title { font-size: 24px; margin-bottom: 10px; }
+        #result-score { font-size: 48px; font-weight: bold; color: #00FF7F; margin-bottom: 20px; }
+        #result-level { font-size: 28px; font-weight: bold; color: yellow; margin-bottom: 30px; text-align: center;}
     </style>
 </head>
 <body>
 
     <div id="menu-screen">
-        <h1>Badminton Trainer<br>V6</h1>
+        <h1>Badminton Trainer<br>V7 Real</h1>
         
         <div class="setting-box">
             <label>球速レベル: <span id="speedDisplay" style="color:#00FF7F; font-weight:bold;">4</span></label>
             <br>
             <input type="range" id="speedSlider" min="1" max="10" value="4" oninput="updateSpeedLabel()">
-            <div style="font-size: 12px; color: #aaa; margin-top:5px;">(1:初心者 〜 10:上級者)</div>
+            <div style="font-size: 12px; color: #aaa; margin-top:5px;">(レベルが高いほど診断結果UP!)</div>
         </div>
 
-        <div class="btn" onclick="startGame('mix')">🏸 実戦ノック開始</div>
-        <div style="margin-top:20px; color:#ccc; font-size:12px;">スマッシュ・ドロップ・ヘアピンが<br>ランダムに来ます</div>
+        <div class="btn" onclick="startGame()">🏸 実戦診断スタート</div>
+        <div style="margin-top:20px; color:#ccc; font-size:12px;">奥から手前に飛んでくる<br>シャトルをタップ！</div>
     </div>
 
     <div id="game-container">
         <canvas id="gameCanvas"></canvas>
         <div id="ui-layer">
-            <div class="hud">Score: <span id="scoreVal">0</span></div>
+            <div class="hud">Hits: <span id="scoreVal">0</span></div>
             <div class="hud">Time: <span id="timeVal">30</span></div>
         </div>
     </div>
 
     <div id="result-screen">
-        <div id="result-msg">Time Up!</div>
+        <div id="result-title">診断結果</div>
+        <div>ヒット数: <span id="result-score">0</span> 回</div>
+        <div id="result-level">判定中...</div>
         <div class="btn" onclick="backToMenu()">メニューに戻る</div>
     </div>
 
@@ -91,8 +98,10 @@
         const timeEl = document.getElementById('timeVal');
         const speedSlider = document.getElementById('speedSlider'); 
         const speedDisplay = document.getElementById('speedDisplay'); 
+        const resultScoreEl = document.getElementById('result-score');
+        const resultLevelEl = document.getElementById('result-level');
 
-        let width, height;
+        let width, height, courtTop, courtBottom;
         let score = 0;
         let timeLeft = 30;
         let gameActive = false;
@@ -101,13 +110,16 @@
         let timerId;
         let currentSpeed = 4;
         let frameCount = 0;
+        const baseShuttleSize = 25; // シャトルの基準サイズ
 
-        // リサイズ＆コート比率設定
         function resize() {
             width = window.innerWidth;
             height = window.innerHeight;
             canvas.width = width;
             canvas.height = height;
+            // コートの描画領域（CSSの背景に合わせる）
+            courtTop = height * 0.1;
+            courtBottom = height * 0.9;
         }
         window.addEventListener('resize', resize);
         resize();
@@ -116,7 +128,7 @@
             speedDisplay.innerText = speedSlider.value;
         }
 
-        function startGame(mode) {
+        function startGame() {
             currentSpeed = parseInt(speedSlider.value);
             menuScreen.style.display = 'none';
             resultScreen.style.display = 'none';
@@ -130,7 +142,7 @@
             gameActive = true;
             targets = [];
             
-            spawnShuttle(); // 最初の1球
+            spawnShuttle(); 
 
             clearInterval(timerId);
             timerId = setInterval(() => {
@@ -148,171 +160,178 @@
             menuScreen.style.display = 'flex';
         }
 
+        // ■ ゲーム終了＆診断ロジック
         function endGame() {
             gameActive = false;
             clearInterval(timerId);
             cancelAnimationFrame(gameLoopId);
-            document.getElementById('result-msg').innerHTML = `Training Finish!<br>Hits: ${score}`;
+            
+            resultScoreEl.innerText = score;
+            
+            // ★ 動体視力レベル診断 ★
+            // スピードレベルとヒット数を掛け合わせてスコア化
+            const diagnosticScore = score * currentSpeed;
+            let levelMsg = "";
+            let levelColor = "white";
+
+            if (diagnosticScore >= 250) {
+                levelMsg = "神の目！<br>アスリート級";
+                levelColor = "#FFD700"; // Gold
+            } else if (diagnosticScore >= 180) {
+                levelMsg = "すごい！<br>上級者レベル";
+                levelColor = "#00FF7F"; // SpringGreen
+            } else if (diagnosticScore >= 100) {
+                levelMsg = "ナイス！<br>中級者レベル";
+                levelColor = "cyan";
+            } else if (diagnosticScore >= 50) {
+                levelMsg = "まずまず<br>初級者レベル";
+                levelColor = "white";
+            } else {
+                levelMsg = "もっと鍛えよう！<br>ビギナーレベル";
+                levelColor = "#ccc";
+            }
+            
+            resultLevelEl.innerHTML = levelMsg;
+            resultLevelEl.style.color = levelColor;
             resultScreen.style.display = 'flex';
         }
 
-        // ■ シャトル生成ロジック（ここがバドミントン仕様）
         function spawnShuttle() {
-            // ショットの種類をランダム決定
-            // 0:スマッシュ(速い/奥), 1:ドロップ(遅い/手前), 2:ヘアピン(超遅い/ネット際)
             const shotType = Math.floor(Math.random() * 3);
-            
-            const r = 20; // シャトルサイズ
-            // 相手コート（画面上部）のどこかから発射
-            const startX = Math.random() * (width - r * 2) + r;
-            const startY = -50; // 画面外から出現
+            const startX = Math.random() * (width - baseShuttleSize*2) + baseShuttleSize;
+            const startY = courtTop - 50; // コート奥の画面外から
 
             let speedBase = currentSpeed; 
-            let targetY = 0; // 到達目標地点(Y)
-            let color = '#fff';
+            let targetY = 0; 
 
             if (shotType === 0) { // スマッシュ
-                speedBase *= 1.8; // 速い
-                targetY = height * 0.8; // コート奥まで来る
-                color = 'yellow'; // 視認性高く
+                speedBase *= 1.8; 
+                targetY = courtBottom * 0.9; // コート奥深くまで
             } else if (shotType === 1) { // ドロップ
-                speedBase *= 0.8; // 少し遅い
-                targetY = height * 0.5; // 真ん中あたり
-                color = 'white';
+                speedBase *= 0.8; 
+                targetY = (courtTop + courtBottom) / 2; // コート中央
             } else { // ヘアピン
-                speedBase *= 0.5; // ゆっくり
-                targetY = height * 0.35; // ネット際
-                color = '#eee';
+                speedBase *= 0.5; 
+                targetY = courtTop + (courtBottom - courtTop) * 0.2; // ネット際
             }
 
-            // ターゲットオブジェクト生成
             targets.push({
                 x: startX,
                 y: startY,
-                r: r,
-                targetY: targetY, // どこまで落ちるか
-                speed: speedBase * (height / 800), // 画面高さに合わせて速度調整
-                type: shotType,
-                color: color,
-                alive: true
+                baseR: baseShuttleSize,
+                currentR: baseShuttleSize * 0.5, // 最初は小さく
+                targetY: targetY,
+                speed: speedBase * (height / 800),
+                type: shotType
             });
         }
 
-        // ■ コート描画
+        // ■ リアルなコート描画
         function drawCourt() {
             ctx.strokeStyle = "white";
-            ctx.lineWidth = 4;
+            ctx.lineWidth = 3;
             
-            // ネット（画面上部1/3あたりをネットと見立てる）
-            const netY = height * 0.3;
-            ctx.beginPath();
-            ctx.moveTo(0, netY);
-            ctx.lineTo(width, netY);
-            ctx.stroke();
+            // ネット位置
+            const netY = courtTop + (courtBottom - courtTop) * 0.3;
+            // サービスライン位置
+            const serviceLineY = courtTop + (courtBottom - courtTop) * 0.85;
 
-            // サービスライン（手前）
-            const serviceLineY = height * 0.85;
-            ctx.beginPath();
-            ctx.moveTo(0, serviceLineY);
-            ctx.lineTo(width, serviceLineY);
-            ctx.stroke();
+            // 外枠
+            ctx.strokeRect(10, courtTop, width-20, courtBottom - courtTop);
 
+            // ネット
+            ctx.beginPath(); ctx.moveTo(10, netY); ctx.lineTo(width-10, netY); ctx.stroke();
+            // サービスライン
+            ctx.beginPath(); ctx.moveTo(10, serviceLineY); ctx.lineTo(width-10, serviceLineY); ctx.stroke();
             // センターライン
-            ctx.beginPath();
-            ctx.moveTo(width / 2, netY);
-            ctx.lineTo(width / 2, serviceLineY);
-            ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(width/2, netY); ctx.lineTo(width/2, serviceLineY); ctx.stroke();
             
-            // ネットの網目表現（装飾）
-            ctx.lineWidth = 1;
-            ctx.strokeStyle = "rgba(255,255,255,0.3)";
-            for(let i=0; i<width; i+=20) {
-                ctx.beginPath(); ctx.moveTo(i, netY-10); ctx.lineTo(i, netY+10); ctx.stroke();
+            // ネットの網目
+            ctx.lineWidth = 1; ctx.strokeStyle = "rgba(255,255,255,0.4)";
+            for(let i=10; i<width-10; i+=15) {
+                ctx.beginPath(); ctx.moveTo(i, netY-8); ctx.lineTo(i, netY+8); ctx.stroke();
             }
+        }
+
+        // ■ リアルなシャトル描画（テニスボール卒業！）
+        function drawShuttle(x, y, r) {
+            ctx.save();
+            ctx.translate(x, y);
+            // シャトルの向き（常に下向き）
+            ctx.rotate(Math.PI); 
+
+            // 羽根部分（扇形）
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.arc(0, 0, r * 1.8, -Math.PI / 6, Math.PI / 6);
+            ctx.closePath();
+            ctx.fillStyle = "rgba(255, 255, 255, 0.9)";
+            ctx.fill();
+            // 羽根の軸（線）
+            ctx.strokeStyle = "#ddd"; ctx.lineWidth = 2;
+            ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(r*1.6, 0); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(r*1.5, r*0.5); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(r*1.5, -r*0.5); ctx.stroke();
+
+            // コルク部分（半円）
+            ctx.beginPath();
+            ctx.arc(0, 0, r * 0.6, 0, Math.PI * 2);
+            ctx.fillStyle = "#FFD700"; // コルク色
+            ctx.fill();
+            ctx.strokeStyle = "#DAA520"; ctx.lineWidth = 2; ctx.stroke();
+
+            ctx.restore();
         }
 
         function update() {
             if (!gameActive) return;
-            
-            // 背景（コート色）塗りつぶし
-            ctx.fillStyle = "#2E8B57"; 
-            ctx.fillRect(0, 0, width, height);
-            
-            // コート線を描画
+            ctx.clearRect(0, 0, width, height);
             drawCourt();
-
             frameCount++;
-            // 一定間隔で次弾発射（難易度調整）
-            // スピードが速いほど、次弾の間隔も短くする
-            let spawnRate = Math.max(30, 100 - (currentSpeed * 5));
-            if (frameCount % spawnRate === 0) {
-                spawnShuttle();
-            }
 
-            // シャトルの移動と描画
+            let spawnRate = Math.max(20, 90 - (currentSpeed * 6));
+            if (frameCount % spawnRate === 0) spawnShuttle();
+
             for (let i = targets.length - 1; i >= 0; i--) {
                 const t = targets[i];
-                
-                // 上から下へ移動
                 t.y += t.speed;
 
-                // 描画（簡易的なシャトルっぽい円）
-                ctx.beginPath();
-                ctx.arc(t.x, t.y, t.r, 0, Math.PI * 2);
-                ctx.fillStyle = t.color;
-                ctx.fill();
-                // シャトルの羽部分（装飾）
-                ctx.fillStyle = "rgba(255,255,255,0.5)";
-                ctx.beginPath();
-                ctx.arc(t.x, t.y - 10, t.r * 0.8, 0, Math.PI, true);
-                ctx.fill();
-                ctx.closePath();
+                // ★ 高さ（遠近）の計算 ★
+                // 画面上部(courtTop)にいるときは0.5倍、下部(courtBottom)に来ると1.5倍の大きさになる
+                const progress = (t.y - courtTop) / (courtBottom - courtTop);
+                const scale = 0.5 + Math.max(0, Math.min(1, progress)) * 1.0;
+                t.currentR = t.baseR * scale;
 
-                // 画面外（下）に出たら消す（ミス）
-                // 本来は「ターゲットY」を超えたら消すなど調整可能
-                if (t.y > height + 50) {
-                    targets.splice(i, 1);
-                }
+                // リアルシャトル描画関数を呼び出す
+                drawShuttle(t.x, t.y, t.currentR);
+
+                if (t.y > height + 100) targets.splice(i, 1);
             }
-
             gameLoopId = requestAnimationFrame(update);
         }
 
-        // タッチ判定
         function handleInput(e) {
             if (!gameActive) return;
             e.preventDefault();
             const touches = e.changedTouches || [e]; 
-            
             for (let i = 0; i < touches.length; i++) {
                 const tx = touches[i].clientX;
                 const ty = touches[i].clientY;
-
                 for (let j = targets.length - 1; j >= 0; j--) {
                     const t = targets[j];
+                    // 判定も見た目の大きさに合わせる
                     const dist = Math.hypot(t.x - tx, t.y - ty);
-                    
-                    if (dist < t.r + 30) { // 判定広め
+                    if (dist < t.currentR + 30) { 
                         score++;
                         scoreEl.innerText = score;
-                        targets.splice(j, 1); // ヒットしたら消える
-                        
-                        // ヒットエフェクト（黄色い波紋）
-                        createHitEffect(tx, ty);
+                        targets.splice(j, 1);
                         break;
                     }
                 }
             }
         }
-        
-        function createHitEffect(x, y) {
-            // 簡易エフェクト（今回は描画処理に入れ込むのが複雑になるのでスキップ可だが、ログには残す）
-            // console.log("Hit!");
-        }
-
         window.addEventListener('mousedown', handleInput);
         window.addEventListener('touchstart', handleInput, {passive: false});
-
     </script>
 </body>
 </html>
