@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Badminton Vision V33</title>
+    <title>Badminton Vision V36</title>
     <style>
         body {
             margin: 0; overflow: hidden;
@@ -33,6 +33,13 @@
         }
         #diff-val { font-size: 20px; font-weight: bold; color: white; }
 
+        /* モード説明オーバーレイ */
+        #mode-info {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            font-size: 40px; font-weight: 900; color: rgba(255,255,255,0.2);
+            pointer-events: none; white-space: nowrap; z-index: 5;
+        }
+
         #menu-screen {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background-color: rgba(0,0,0,0.92); display: flex; flex-direction: column;
@@ -59,8 +66,8 @@
         .btn-measure { background-color: #8B0000; border-color: #FF6347; color: white; }
         .btn-def { background-color: #191970; border-color: #4169E1; }
         .btn-off { background-color: #8B4500; border-color: #FFA500; }
-        .btn-rally { background-color: #006400; border-color: #32CD32; }
-        .btn-report { background-color: #4B0082; border-color: #9370DB; margin-top: 20px; }
+        .btn-rally { background-color: #4B0082; border-color: #9370DB; } /* 戦術眼は紫 */
+        .btn-report { background-color: #333; border-color: #fff; margin-top: 20px; }
 
         #feedback-msg {
             position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%);
@@ -100,7 +107,7 @@
 <body>
 
     <div id="menu-screen">
-        <h1>Badminton Vision V33<br><span style="font-size:12px; color:#aaa;">SCORING FIXED</span></h1>
+        <h1>Badminton Vision V36<br><span style="font-size:12px; color:#aaa;">TACTICAL EYE</span></h1>
         
         <div class="btn btn-report" onclick="showReport()">📊 総合レポート</div>
 
@@ -112,15 +119,16 @@
         <div class="section-title">【B】測定</div>
         <div class="btn btn-measure" onclick="startGame('reflex')">④ 反射神経 (AGE TEST)</div>
 
-        <div class="section-title">【C】実戦 (適正得点)</div>
-        <div class="btn btn-def" onclick="startGame('defense')">⑤ 守り (レシーブ)</div>
-        <div class="btn btn-off" onclick="startGame('offense')">⑥ 攻め (スマッシュ)</div>
-        <div class="btn btn-rally" onclick="startGame('rally')">⑦ 総合 (ラリー)</div>
+        <div class="section-title">【C】実戦 (4つの能力強化)</div>
+        <div class="btn btn-def" onclick="startGame('defense')">⑤ 守り (反応・動体視力)</div>
+        <div class="btn btn-off" onclick="startGame('offense')">⑥ 攻め (緩急・タメ)</div>
+        <div class="btn btn-rally" onclick="startGame('rally')">⑦ 戦術眼 (フェイント・判断)</div>
     </div>
 
     <div id="game-container">
         <canvas id="gameCanvas"></canvas>
         <div id="feedback-msg"></div>
+        <div id="mode-info"></div>
         <div id="reflex-signal">WAIT</div>
         <div id="combo-display">0 COMBO</div>
         <div id="diff-display">SPEED: <span id="diff-val">LV.1</span></div>
@@ -155,6 +163,7 @@
         const hudLeft = document.getElementById('hud-left');
         const hudRight = document.getElementById('hud-right');
         const feedbackEl = document.getElementById('feedback-msg');
+        const modeInfoEl = document.getElementById('mode-info');
         const comboEl = document.getElementById('combo-display');
         const diffValEl = document.getElementById('diff-val');
         const reflexSignal = document.getElementById('reflex-signal');
@@ -173,7 +182,6 @@
         let gameTimerId;
         let resultLockTimer;
 
-        // 難易度 (0.0 ~ 1.0)
         let currentDifficulty = 0.0; 
 
         const lastScores = { saccade: 0, pursuit: 0, depth: 0, reflex: null, defense: 0, offense: 0, rally: 0 };
@@ -204,7 +212,6 @@
 
             if (success) {
                 combo++;
-                // B帯は上がりやすく
                 let inc = (currentDifficulty < 0.5) ? 0.06 : 0.04;
                 currentDifficulty += inc; 
                 if (currentDifficulty > 1.0) currentDifficulty = 1.0;
@@ -233,7 +240,7 @@
             else diffValEl.style.color = "white";
         }
 
-        // ランク基準 (V33: 得点UPに合わせて調整済)
+        // ランク基準
         function getRankInfo(mode, val) {
             if (val === null || val === 0) return { rank: "-", title: "-" };
             
@@ -245,22 +252,14 @@
             }
             
             let s=0, a=0, b=0;
-            
-            // ① 跳躍性: S=1200
             if(mode==='saccade') { s=1200; a=800; b=500; }
-            
-            // ② 追従性: S=3500
             else if(mode==='pursuit') { s=3500; a=2000; b=1000; }
-            
-            // ③ 深視力: S=1500
             else if(mode==='depth') { s=1500; a=1000; b=500; }
             
-            // ⑤⑥ 実戦: S=1500 (基礎点30点なので50球でクリア可能)
-            else if(mode==='defense') { s=1500; a=1000; b=500; }
-            else if(mode==='offense') { s=1500; a=1000; b=500; }
-            
-            // ⑦ 総合: S=2000 (基礎点20点・60秒)
-            else if(mode==='rally') { s=2000; a=1300; b=700; } 
+            // 実戦系は2000超えでS
+            else if(mode==='defense') { s=2500; a=1500; b=800; }
+            else if(mode==='offense') { s=2500; a=1500; b=800; }
+            else if(mode==='rally') { s=2500; a=1500; b=800; } 
             
             if(val >= s) return { rank: "S", title: "Top Athlete" };
             if(val >= a) return { rank: "A", title: "Athlete" };
@@ -280,7 +279,7 @@
             const modes = [
                 {id:'saccade', name:'① 跳躍性'}, {id:'pursuit', name:'② 追従性'}, {id:'depth', name:'③ 深視力'},
                 {id:'reflex', name:'④ 反射'},
-                {id:'defense', name:'⑤ 守り'}, {id:'offense', name:'⑥ 攻め'}, {id:'rally', name:'⑦ 総合'}
+                {id:'defense', name:'⑤ 守り'}, {id:'offense', name:'⑥ 攻め'}, {id:'rally', name:'⑦ 戦術眼'}
             ];
             modes.forEach(m => {
                 const last = lastScores[m.id] !== null ? lastScores[m.id] : "-";
@@ -303,11 +302,16 @@
             resultScreen.style.display = 'none';
             gameContainer.style.display = 'block';
             reflexSignal.style.display = 'none';
+            modeInfoEl.innerText = "";
             
             score = 0; combo = 0; targets = []; effects = []; gameActive = true; spawnTimer = 0;
             currentDifficulty = 0.0; 
             comboEl.style.opacity = 0;
             updateDiffDisplay();
+
+            if(mode === 'defense') modeInfoEl.innerText = "DEFENSE";
+            if(mode === 'offense') modeInfoEl.innerText = "OFFENSE";
+            if(mode === 'rally') modeInfoEl.innerText = "TACTICAL";
 
             if (mode === 'reflex') {
                 hudLeft.innerText = "Reflex"; hudRight.innerText = "1/3";
@@ -404,10 +408,15 @@
                 spawnTimer--;
                 if(spawnTimer <= 0) {
                     spawnTarget();
-                    // ① Saccade: 早め
-                    if(gameMode === 'saccade') spawnTimer = Math.max(0, 10 - currentDifficulty*10); 
-                    // 他は標準
-                    else spawnTimer = Math.max(10, 35 - currentDifficulty*25);
+                    // V36: 実戦は超連射
+                    if(gameMode==='defense'||gameMode==='offense'||gameMode==='rally') {
+                        spawnTimer = Math.max(5, 20 - currentDifficulty*15); 
+                    } else if (gameMode==='depth') {
+                        spawnTimer = Math.max(10, 25 - currentDifficulty*20);
+                    } else {
+                        spawnTimer = Math.max(10, 35 - currentDifficulty*25);
+                    }
+                    if(gameMode==='saccade') spawnTimer = 0;
                 }
             }
             updateTargets(); updateEffects(); drawEffects();
@@ -441,32 +450,69 @@
             else if (gameMode === 'depth') {
                 let baseZ = 4 + (d * 6);
                 let zSpd = baseZ + Math.random();
-                let tx = Math.random() * (width - 100) + 50; // Random X
-                let ty = Math.random() * (height - 100) + 50; // Random Y
+                let tx = Math.random() * (width - 100) + 50; 
+                let ty = Math.random() * (height - 100) + 50; 
                 targets.push({ x: tx, y: ty, r: 5, color: 'yellow', type: 'zoom', growing: true, maxR: 110, zSpeed: zSpd, isHit: false });
             }
             else {
                 let type = 'rally';
                 if(gameMode === 'defense') type = 'def';
                 else if(gameMode === 'offense') type = 'off';
-                else type = (Math.random()<0.5) ? 'def' : 'off';
+                else {
+                    // ★ V36: 戦術眼 (Mix)
+                    // スマッシュ(def)、ロブ(off)、フェイント(feint)をランダム
+                    let r = Math.random();
+                    if(r < 0.4) type = 'def';
+                    else if(r < 0.7) type = 'off';
+                    else type = 'feint';
+                }
                 
                 const startX = Math.random() * (width*0.8) + width*0.1;
                 const startY = height * 0.1;
                 const endY = height * 0.85; 
 
-                let speed = 0;
-                if (type === 'def') speed = 8 + (d * 14); 
-                else speed = 5 + (d * 9); 
-
-                const hitY = (type === 'def') ? height * 0.75 : height * 0.4;
-                
-                targets.push({
-                    x: startX, y: startY, r: 10,
-                    type: 'shuttle', mode: type,
-                    speed: speed, hitY: hitY, state: 'white',
-                    endY: endY, isHit: false
-                });
+                if (type === 'def') {
+                    // スマッシュ（直線・超高速）
+                    let speed = 15 + (d * 20); // 15-35
+                    let tx = (Math.random() * width*0.8) + width*0.1; 
+                    let vx = (tx - startX) / ( (endY-startY)/speed ); 
+                    targets.push({
+                        x: startX, y: startY, r: 10,
+                        type: 'shuttle', mode: type,
+                        vx: vx, speed: speed, 
+                        hitY: height * 0.75, state: 'white',
+                        endY: endY, isHit: false
+                    });
+                } else if (type === 'off') {
+                    // ロブ（放物線）
+                    let timeTotal = 110 - (d * 30); 
+                    let gravity = 0.5 + (d * 0.3);
+                    let vy = - (gravity * timeTotal / 2);
+                    targets.push({
+                        x: startX, y: startY + 200, 
+                        r: 10,
+                        type: 'lob', mode: type,
+                        vy: vy, gravity: gravity,
+                        state: 'white',
+                        groundY: height * 0.9, isHit: false
+                    });
+                } else if (type === 'feint') {
+                    // ★ V36: フェイント（ドロップ）
+                    // 最初はスマッシュの速度、途中で急減速
+                    let initialSpeed = 15 + (d * 20); // スマッシュと同じ初速
+                    let tx = (Math.random() * width*0.8) + width*0.1;
+                    let vx = (tx - startX) / ( (endY-startY)/initialSpeed );
+                    
+                    targets.push({
+                        x: startX, y: startY, r: 10,
+                        type: 'feint', mode: type,
+                        vx: vx, speed: initialSpeed,
+                        hitY: height * 0.6, // 少し前で落ちる
+                        state: 'white',
+                        endY: endY, isHit: false,
+                        braking: false // 減速フラグ
+                    });
+                }
             }
         }
 
@@ -505,18 +551,15 @@
                     drawCircle(t.x, t.y, t.r, color, 1);
                 }
                 else if (t.type === 'shuttle') {
+                    // スマッシュ
                     t.y += t.speed;
+                    t.x += t.vx;
+                    
                     let progress = (t.y - (height*0.1)) / (height*0.75);
-                    if(progress < 0) progress = 0; if(progress > 1) progress = 1;
                     const currentR = 15 + (progress * 35);
+                    const zoneSize = Math.max(50, 120 - (currentDifficulty * 50)); 
                     
-                    const baseZone = 120;
-                    const zoneSize = Math.max(50, baseZone - (currentDifficulty * 50)); 
-                    
-                    let isHittable = false;
-                    if (t.y > t.hitY - zoneSize && t.y < t.hitY + zoneSize) isHittable = true;
-
-                    if (isHittable) {
+                    if (t.y > t.hitY - zoneSize && t.y < t.hitY + zoneSize) {
                         t.state = 'yellow';
                         drawShuttle(t.x, t.y, currentR, "#FFD700");
                     } else {
@@ -526,11 +569,57 @@
                     }
 
                     if (t.y > height + 50) {
-                        if (!t.isHit) {
-                            showFeedback("MISS", "gray");
-                            adjustDifficulty(false);
-                            targets.splice(i, 1);
-                        }
+                        if (!t.isHit) { showFeedback("MISS", "gray"); adjustDifficulty(false); targets.splice(i, 1); }
+                    }
+                }
+                else if (t.type === 'lob') {
+                    // ロブ
+                    t.vy += t.gravity;
+                    t.y += t.vy;
+                    let heightRatio = 1.0 - (t.y / height); if(heightRatio < 0) heightRatio = 0;
+                    let isApex = Math.abs(t.vy) < 3.0; 
+                    const currentR = 10 + (heightRatio * 50);
+
+                    if (isApex && t.y < height*0.6) { 
+                        t.state = 'yellow';
+                        drawShuttle(t.x, t.y, currentR, "#FFD700");
+                    } else {
+                        t.state = 'white';
+                        if (t.vy > 5) drawShuttle(t.x, t.y, currentR, "gray");
+                        else drawShuttle(t.x, t.y, currentR, "white");
+                    }
+
+                    if (t.y > height + 50) {
+                        if (!t.isHit) { showFeedback("MISS", "gray"); adjustDifficulty(false); targets.splice(i, 1); }
+                    }
+                }
+                else if (t.type === 'feint') {
+                    // ★ V36: フェイント挙動
+                    // ある地点(ネット通過後)で急減速
+                    if (t.y > height * 0.3 && !t.braking) {
+                        t.braking = true;
+                        t.speed *= 0.2; // 速度80%ダウン（ブレーキ！）
+                    }
+                    
+                    t.y += t.speed;
+                    t.x += t.vx * (t.braking ? 0.2 : 1.0); // 横移動も減速
+                    
+                    let progress = (t.y - (height*0.1)) / (height*0.6);
+                    const currentR = 15 + (progress * 30);
+                    
+                    // 減速後は判定ゾーンに入る
+                    if (t.braking && t.y > t.hitY - 60 && t.y < t.hitY + 60) {
+                        t.state = 'yellow';
+                        // フェイント球は紫色になる
+                        drawShuttle(t.x, t.y, currentR, "#DA70D6"); 
+                    } else {
+                        t.state = 'white';
+                        // まだブレーキ前は白（スマッシュに見える）
+                        drawShuttle(t.x, t.y, currentR, "white");
+                    }
+                    
+                    if (t.y > height + 50) {
+                        if (!t.isHit) { showFeedback("MISS", "gray"); adjustDifficulty(false); targets.splice(i, 1); }
                     }
                 }
             }
@@ -592,19 +681,25 @@
                         else { showFeedback("WAIT", "orange"); return; }
                     }
                 }
-                else if (t.type === 'shuttle') { 
-                    let progress = (t.y - (height*0.1)) / (height*0.75);
-                    const currentR = 15 + (progress * 35);
-                    
-                    if(Math.hypot(t.x-tx, t.y-ty) < currentR + 30) {
+                // 実戦系共通
+                else if (t.type === 'shuttle' || t.type === 'lob' || t.type === 'feint') { 
+                    // 共通距離判定
+                    if(Math.hypot(t.x-tx, t.y-ty) < 70) {
                         if(t.state === 'yellow') {
-                            hit = true; pts = 30; msg = "NICE";
+                            hit = true; pts = 50; msg = "NICE"; 
+                            if(t.type === 'feint') { pts = 100; msg = "GREAT READ!"; } // フェイント看破ボーナス
                         } else {
-                            if (t.y > t.hitY - 100 && t.y < t.hitY + 100) { 
-                                hit = true; pts = 10; msg = "GOOD";
+                            if(t.type === 'lob') {
+                                if(t.vy < 0) showFeedback("WAIT...", "orange");
+                                else showFeedback("LOW...", "orange");
+                            } else if (t.type === 'feint' && !t.braking) {
+                                // フェイント減速前に叩いた（引っかかった）
+                                showFeedback("TRICKED!", "red");
+                                adjustDifficulty(false); targets.splice(i,1); return;
                             } else {
-                                showFeedback("TIMING...", "orange"); return; 
+                                showFeedback("TIMING", "orange");
                             }
+                            return; 
                         }
                     }
                 }
@@ -612,20 +707,8 @@
                 if(hit) {
                     t.isHit = true; 
                     
-                    // ★ V33: モード別単価修正反映
-                    let basePts = 10;
-                    if(gameMode === 'defense' || gameMode === 'offense') basePts = 30; 
-                    if(gameMode === 'rally') basePts = 20;
-                    if(gameMode === 'depth') basePts = 70;
-                    if(gameMode === 'saccade') basePts = 10;
-                    
-                    // シャトルの場合、HIT判定内ですでにptsに30/10を入れているが、ここで上書きして統一
-                    if (t.type === 'shuttle') pts = basePts;
-                    
-                    // 難易度ボーナス
                     let diffBonus = 1.0 + currentDifficulty * 2.0; 
                     let finalPts = Math.floor(pts * diffBonus);
-                    
                     score += finalPts;
                     hudLeft.innerText = `Score: ${score}`;
                     
