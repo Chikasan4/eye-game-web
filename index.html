@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Badminton Vision V31</title>
+    <title>Badminton Vision V33</title>
     <style>
         body {
             margin: 0; overflow: hidden;
@@ -100,19 +100,19 @@
 <body>
 
     <div id="menu-screen">
-        <h1>Badminton Vision V31<br><span style="font-size:12px; color:#aaa;">DEPTH BREAK EDITION</span></h1>
+        <h1>Badminton Vision V33<br><span style="font-size:12px; color:#aaa;">SCORING FIXED</span></h1>
         
         <div class="btn btn-report" onclick="showReport()">📊 総合レポート</div>
 
         <div class="section-title">【A】基礎・眼球トレ</div>
         <div class="btn btn-vision" onclick="startGame('saccade')">① 跳躍性 (TAP)</div>
         <div class="btn btn-vision" onclick="startGame('pursuit')">② 追従性 (TRACE)</div>
-        <div class="btn btn-vision" onclick="startGame('depth')">③ 深視力 (High Speed)</div>
+        <div class="btn btn-vision" onclick="startGame('depth')">③ 深視力 (RANDOM)</div>
 
         <div class="section-title">【B】測定</div>
         <div class="btn btn-measure" onclick="startGame('reflex')">④ 反射神経 (AGE TEST)</div>
 
-        <div class="section-title">【C】実戦 (速度=得点)</div>
+        <div class="section-title">【C】実戦 (適正得点)</div>
         <div class="btn btn-def" onclick="startGame('defense')">⑤ 守り (レシーブ)</div>
         <div class="btn btn-off" onclick="startGame('offense')">⑥ 攻め (スマッシュ)</div>
         <div class="btn btn-rally" onclick="startGame('rally')">⑦ 総合 (ラリー)</div>
@@ -204,7 +204,7 @@
 
             if (success) {
                 combo++;
-                // V31: 上昇スピード少しUP
+                // B帯は上がりやすく
                 let inc = (currentDifficulty < 0.5) ? 0.06 : 0.04;
                 currentDifficulty += inc; 
                 if (currentDifficulty > 1.0) currentDifficulty = 1.0;
@@ -233,7 +233,7 @@
             else diffValEl.style.color = "white";
         }
 
-        // ランク基準 (V31: Depth調整済)
+        // ランク基準 (V33: 得点UPに合わせて調整済)
         function getRankInfo(mode, val) {
             if (val === null || val === 0) return { rank: "-", title: "-" };
             
@@ -245,12 +245,21 @@
             }
             
             let s=0, a=0, b=0;
-            if(mode==='saccade') { s=1200; a=800; b=500; }
-            else if(mode==='pursuit') { s=3500; a=2000; b=1000; }
-            else if(mode==='depth') { s=1500; a=1000; b=500; } // S基準1500
             
+            // ① 跳躍性: S=1200
+            if(mode==='saccade') { s=1200; a=800; b=500; }
+            
+            // ② 追従性: S=3500
+            else if(mode==='pursuit') { s=3500; a=2000; b=1000; }
+            
+            // ③ 深視力: S=1500
+            else if(mode==='depth') { s=1500; a=1000; b=500; }
+            
+            // ⑤⑥ 実戦: S=1500 (基礎点30点なので50球でクリア可能)
             else if(mode==='defense') { s=1500; a=1000; b=500; }
             else if(mode==='offense') { s=1500; a=1000; b=500; }
+            
+            // ⑦ 総合: S=2000 (基礎点20点・60秒)
             else if(mode==='rally') { s=2000; a=1300; b=700; } 
             
             if(val >= s) return { rank: "S", title: "Top Athlete" };
@@ -395,12 +404,10 @@
                 spawnTimer--;
                 if(spawnTimer <= 0) {
                     spawnTarget();
-                    // V31: Depth沸きを早く
-                    const base = (gameMode==='depth') ? 25 : 45; 
-                    if(gameMode==='defense'||gameMode==='offense') spawnTimer = Math.max(10, 35 - currentDifficulty*25);
-                    else spawnTimer = Math.max(10, base - (currentDifficulty * 20));
-                    
-                    if(gameMode==='saccade') spawnTimer = 0;
+                    // ① Saccade: 早め
+                    if(gameMode === 'saccade') spawnTimer = Math.max(0, 10 - currentDifficulty*10); 
+                    // 他は標準
+                    else spawnTimer = Math.max(10, 35 - currentDifficulty*25);
                 }
             }
             updateTargets(); updateEffects(); drawEffects();
@@ -432,10 +439,11 @@
                 targets.push({ x: width/2, y: height/2, r: 35, color: 'cyan', type: 'moving', angle: 0, speed: spd, baseSpeed: spd });
             }
             else if (gameMode === 'depth') {
-                // V31: ズーム速度を全体的に高速化 (MaxスピードUP)
-                let baseZ = 4 + (d * 6); // V30: 2+d*4 -> V31: 4+d*6
+                let baseZ = 4 + (d * 6);
                 let zSpd = baseZ + Math.random();
-                targets.push({ x: width/2, y: height/2, r: 5, color: 'yellow', type: 'zoom', growing: true, maxR: 110, zSpeed: zSpd, isHit: false });
+                let tx = Math.random() * (width - 100) + 50; // Random X
+                let ty = Math.random() * (height - 100) + 50; // Random Y
+                targets.push({ x: tx, y: ty, r: 5, color: 'yellow', type: 'zoom', growing: true, maxR: 110, zSpeed: zSpd, isHit: false });
             }
             else {
                 let type = 'rally';
@@ -580,7 +588,7 @@
                 }
                 else if (t.type === 'zoom') { 
                     if(Math.hypot(t.x-tx, t.y-ty) < t.r + 20) {
-                        if (t.r > t.maxR*0.8) { hit = true; pts = 70; msg = "GOOD!"; } // V31: Base 50 -> 70
+                        if (t.r > t.maxR*0.8) { hit = true; pts = 70; msg = "GOOD!"; }
                         else { showFeedback("WAIT", "orange"); return; }
                     }
                 }
@@ -604,8 +612,20 @@
                 if(hit) {
                     t.isHit = true; 
                     
+                    // ★ V33: モード別単価修正反映
+                    let basePts = 10;
+                    if(gameMode === 'defense' || gameMode === 'offense') basePts = 30; 
+                    if(gameMode === 'rally') basePts = 20;
+                    if(gameMode === 'depth') basePts = 70;
+                    if(gameMode === 'saccade') basePts = 10;
+                    
+                    // シャトルの場合、HIT判定内ですでにptsに30/10を入れているが、ここで上書きして統一
+                    if (t.type === 'shuttle') pts = basePts;
+                    
+                    // 難易度ボーナス
                     let diffBonus = 1.0 + currentDifficulty * 2.0; 
                     let finalPts = Math.floor(pts * diffBonus);
+                    
                     score += finalPts;
                     hudLeft.innerText = `Score: ${score}`;
                     
