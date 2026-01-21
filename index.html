@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Badminton Vision V23</title>
+    <title>Badminton Vision V24 (LIMIT BREAK)</title>
     <style>
         body {
             margin: 0; overflow: hidden;
-            background-color: #202020;
+            background-color: #111; /* 背景を少し黒く引き締め */
             font-family: sans-serif; color: white; touch-action: none;
             user-select: none; -webkit-user-select: none;
         }
@@ -19,98 +19,103 @@
             pointer-events: none; padding: 15px; box-sizing: border-box;
             display: flex; justify-content: space-between;
         }
-        .hud { font-size: 18px; font-weight: bold; text-shadow: 1px 1px 2px black; }
+        .hud { font-size: 18px; font-weight: bold; text-shadow: 1px 1px 2px black; font-family: monospace; }
         
+        /* メニュー画面 */
         #menu-screen {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background-color: #1a1a1a; display: flex; flex-direction: column;
+            background-color: #0d0d0d; display: flex; flex-direction: column;
             align-items: center; justify-content: flex-start; z-index: 100;
             overflow-y: auto; padding-top: 20px; padding-bottom: 40px;
         }
-        h1 { margin: 10px 0 10px 0; font-size: 22px; text-align: center; color: #00FF7F; border-bottom: 2px solid #00FF7F; padding-bottom: 5px; }
+        h1 { margin: 10px 0 10px 0; font-size: 22px; text-align: center; color: #FF4500; border-bottom: 2px solid #FF4500; padding-bottom: 5px; font-weight: 900; }
         
         .section-title {
-            color: #aaa; font-size: 14px; margin-top: 15px; margin-bottom: 5px; 
-            width: 90%; max-width: 350px; text-align: left; border-left: 3px solid #00FF7F; padding-left: 8px;
+            color: #888; font-size: 13px; margin-top: 15px; margin-bottom: 5px; 
+            width: 90%; max-width: 350px; text-align: left; border-left: 3px solid #FF4500; padding-left: 8px;
         }
         
         .btn {
-            width: 90%; max-width: 350px; padding: 12px; margin: 6px 0;
+            width: 90%; max-width: 350px; padding: 14px; margin: 6px 0;
             font-size: 16px; font-weight: bold; color: white;
-            background-color: #444; border: 1px solid #666;
-            border-radius: 8px; cursor: pointer; text-align: center;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.5);
-            transition: transform 0.1s;
+            background-color: #333; border: 1px solid #555;
+            border-radius: 6px; cursor: pointer; text-align: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.6);
+            transition: transform 0.05s, background-color 0.1s;
         }
-        .btn:active { transform: scale(0.96); background-color: #555; }
-        .btn:disabled { background-color: #333; color: #777; border-color: #444; cursor: not-allowed; transform: none; }
+        .btn:active { transform: scale(0.98); background-color: #444; }
+        .btn:disabled { background-color: #222; color: #555; border-color: #333; cursor: not-allowed; transform: none; box-shadow: none;}
         
-        .btn-vision { background-color: #444; border-color: #00FF7F; color: #00FF7F; }
-        .btn-measure { background-color: #b22222; border-color: #ff6347; color: white; }
-        .btn-def { background-color: #4682B4; border-color: #87CEEB; }
-        .btn-off { background-color: #DAA520; border-color: #FFD700; color: #000; }
-        .btn-rally { background-color: #2E8B57; border-color: #98FB98; }
-        .btn-report { background-color: #8A2BE2; border-color: #DA70D6; margin-top: 20px; }
+        /* モード別ボタン色（少しダークに） */
+        .btn-vision { background-color: #2F4F4F; border-color: #00FA9A; color: #00FA9A; }
+        .btn-measure { background-color: #8B0000; border-color: #FF6347; color: white; }
+        .btn-def { background-color: #191970; border-color: #4169E1; }
+        .btn-off { background-color: #8B4500; border-color: #FFA500; }
+        .btn-rally { background-color: #006400; border-color: #32CD32; }
+        .btn-report { background-color: #4B0082; border-color: #9370DB; margin-top: 20px; }
 
         #feedback-msg {
             position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%);
-            font-size: 40px; font-weight: 900; opacity: 0; pointer-events: none;
-            transition: opacity 0.1s; text-shadow: 2px 2px 0 #000; z-index: 20; white-space: nowrap;
+            font-size: 50px; font-weight: 900; opacity: 0; pointer-events: none;
+            transition: opacity 0.1s; text-shadow: 3px 3px 0 #000; z-index: 20; white-space: nowrap;
+            font-style: italic;
         }
 
+        /* 結果・レポート画面 */
         #result-screen, #report-screen {
             display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background-color: rgba(0,0,0,0.95); flex-direction: column;
+            background-color: rgba(0,0,0,0.98); flex-direction: column;
             align-items: center; justify-content: center; z-index: 150;
         }
-        #result-title { font-size: 24px; margin-bottom: 10px; color: #ccc; }
-        #result-main { font-size: 32px; font-weight: bold; color: #00FF7F; margin-bottom: 10px; text-align: center; white-space: pre-line;}
-        #result-sub { font-size: 18px; color: white; margin-bottom: 30px; text-align: center; line-height: 1.5; padding: 0 20px;}
+        #result-title { font-size: 20px; margin-bottom: 10px; color: #888; }
+        #result-main { font-size: 42px; font-weight: 900; color: #FF4500; margin-bottom: 15px; text-align: center; white-space: pre-line;}
+        #result-sub { font-size: 16px; color: #ccc; margin-bottom: 30px; text-align: center; line-height: 1.6; padding: 0 20px;}
         
         #close-result-btn {
-            background:#fff; color:#333; transition: opacity 0.3s;
+            background:#fff; color:#000; border:none; font-weight:900;
         }
 
         /* レポート表 */
         table { border-collapse: collapse; width: 95%; max-width: 400px; color: white; margin-bottom: 20px; font-size: 14px; }
-        th, td { border: 1px solid #555; padding: 6px; text-align: center; }
-        th { background-color: #333; color: #00FF7F; }
-        .rank-s { color: #FFD700; font-weight: bold; }
-        .rank-a { color: #00FF7F; }
+        th, td { border: 1px solid #444; padding: 8px; text-align: center; }
+        th { background-color: #222; color: #FF4500; }
+        .rank-s { color: #FFD700; font-weight: 900; text-shadow: 0 0 5px #FFD700; }
+        .rank-a { color: #00FF7F; font-weight: bold; }
         .rank-b { color: white; }
         .rank-c { color: #aaa; }
         
         #reflex-signal {
             display: none; position: absolute; top: 50%; left: 50%; 
-            width: 250px; height: 250px; border-radius: 50%;
+            width: 200px; height: 200px; border-radius: 50%;
             transform: translate(-50%, -50%);
-            background-color: #333; border: 5px solid #555;
+            background-color: #333; border: 4px solid #555;
             z-index: 10; cursor: pointer;
             align-items: center; justify-content: center;
-            font-size: 30px; font-weight: bold; color: white;
+            font-size: 32px; font-weight: 900; color: white;
             user-select: none;
+            box-shadow: 0 0 20px rgba(0,0,0,0.8);
         }
     </style>
 </head>
 <body>
 
     <div id="menu-screen">
-        <h1>Badminton Vision V23</h1>
+        <h1>Badminton Vision V24<br><span style="font-size:12px; color:#666;">LIMIT BREAK EDITION</span></h1>
         
-        <div class="btn btn-report" onclick="showReport()">📊 総合レポート (今回/Best)</div>
+        <div class="btn btn-report" onclick="showReport()">📊 総合レポート (HARD)</div>
 
-        <div class="section-title">【A】基礎・眼球トレ</div>
-        <div class="btn btn-vision" onclick="startGame('saccade')">① 跳躍性 (加速あり)</div>
-        <div class="btn btn-vision" onclick="startGame('pursuit')">② 追従性 (加速あり)</div>
-        <div class="btn btn-vision" onclick="startGame('depth')">③ 深視力 (高速ズーム)</div>
+        <div class="section-title">【A】基礎・眼球トレ (高速)</div>
+        <div class="btn btn-vision" onclick="startGame('saccade')">① 跳躍性 (FLASH)</div>
+        <div class="btn btn-vision" onclick="startGame('pursuit')">② 追従性 (HIGH SPEED)</div>
+        <div class="btn btn-vision" onclick="startGame('depth')">③ 深視力 (DYNAMIC)</div>
 
         <div class="section-title">【B】測定</div>
-        <div class="btn btn-measure" onclick="startGame('reflex')">④ 反射神経 (AGE TEST)</div>
+        <div class="btn btn-measure" onclick="startGame('reflex')">④ 反射神経 (PRO TEST)</div>
 
-        <div class="section-title">【C】実戦 (色ナビ)</div>
-        <div class="btn btn-def" onclick="startGame('defense')">⑤ 守り (レシーブ)</div>
-        <div class="btn btn-off" onclick="startGame('offense')">⑥ 攻め (スマッシュ)</div>
-        <div class="btn btn-rally" onclick="startGame('rally')">⑦ 総合 (加速ラリー)</div>
+        <div class="section-title">【C】実戦 (激辛判定)</div>
+        <div class="btn btn-def" onclick="startGame('defense')">⑤ 守り (IRON WALL)</div>
+        <div class="btn btn-off" onclick="startGame('offense')">⑥ 攻め (SMASH)</div>
+        <div class="btn btn-rally" onclick="startGame('rally')">⑦ 総合 (GOD RALLY)</div>
     </div>
 
     <div id="game-container">
@@ -124,16 +129,16 @@
     </div>
 
     <div id="result-screen">
-        <div id="result-title">Finish!</div>
+        <div id="result-title">RESULT</div>
         <div id="result-main">0</div>
         <div id="result-sub">...</div>
         <button id="close-result-btn" class="btn" onclick="backToMenu()">メニューに戻る</button>
-        <div style="font-size:12px; color:#777; margin-top:10px;">(誤操作防止のため1.5秒ロック中)</div>
+        <div style="font-size:11px; color:#555; margin-top:10px;">(LOCK: 1.5s)</div>
     </div>
 
     <div id="report-screen">
-        <h2 style="color:#00FF7F; margin-bottom:10px;">TOTAL REPORT</h2>
-        <div style="font-size:12px; color:#aaa; margin-bottom:10px;">(ランク: S=超一流, A=優秀, B=普通)</div>
+        <h2 style="color:#FF4500; margin-bottom:5px;">TOTAL REPORT</h2>
+        <div style="font-size:11px; color:#777; margin-bottom:15px;">※V24基準 (難易度UP)</div>
         <table id="report-table">
             </table>
         <div class="btn" style="background:#fff; color:#333;" onclick="closeReport()">閉じる</div>
@@ -162,17 +167,11 @@
         let spawnTimer = 0;
         let animationFrameId;
         let gameTimerId;
-        let resultLockTimer; // 結果画面のロック用
+        let resultLockTimer;
 
-        // スコア記録 (今回, ベスト)
-        const lastScores = {
-            saccade: 0, pursuit: 0, depth: 0, reflex: null,
-            defense: 0, offense: 0, rally: 0
-        };
-        const bestScores = {
-            saccade: 0, pursuit: 0, depth: 0, reflex: null,
-            defense: 0, offense: 0, rally: 0
-        };
+        // スコア記録
+        const lastScores = { saccade: 0, pursuit: 0, depth: 0, reflex: null, defense: 0, offense: 0, rally: 0 };
+        const bestScores = { saccade: 0, pursuit: 0, depth: 0, reflex: null, defense: 0, offense: 0, rally: 0 };
 
         // 反射測定用
         let reflexData = [];
@@ -194,27 +193,35 @@
         window.addEventListener('resize', resize);
         resize();
 
-        // ■ ランク判定
+        // ■ V24: 鬼のランク基準
         function getRank(mode, val) {
             if (val === null || val === 0) return "-";
             
-            // 反射神経は低いほど良い
+            // 反射神経 (ms)
             if (mode === 'reflex') {
-                if(val < 200) return "S";
-                if(val < 240) return "A";
-                if(val < 280) return "B";
+                if(val < 180) return "S"; // 神
+                if(val < 220) return "A"; // プロ
+                if(val < 260) return "B"; // 一般
                 if(val < 350) return "C";
                 return "D";
             }
             
-            // 他は高いほど良い (基準は適宜調整)
+            // スコア基準 (V23の1.5~2倍へ引き上げ)
             let s=0, a=0, b=0, c=0;
-            if(mode==='saccade') { s=40; a=30; b=20; c=10; } // 30秒
-            else if(mode==='pursuit') { s=500; a=350; b=200; c=100; } // フレーム加算なので数が多い
-            else if(mode==='depth') { s=100; a=70; b=40; c=20; } // 5ptずつ
-            else if(mode==='defense') { s=30; a=20; b=10; c=5; }
-            else if(mode==='offense') { s=40; a=25; b=15; c=5; }
-            else if(mode==='rally') { s=50; a=35; b=20; c=10; } // 60秒
+            
+            // Saccade: 早消え・点数渋め
+            if(mode==='saccade') { s=60; a=45; b=30; c=15; }
+            
+            // Pursuit: スコア加算頻度を減らしたので基準調整 (旧1000オーバー対策)
+            if(mode==='pursuit') { s=800; a=600; b=400; c=200; }
+            
+            // Depth: シビアに
+            if(mode==='depth') { s=150; a=100; b=60; c=30; }
+            
+            // 実戦系: スコア加算は1回10点程度
+            if(mode==='defense') { s=300; a=200; b=100; c=50; }
+            if(mode==='offense') { s=350; a=250; b=150; c=80; }
+            if(mode==='rally') { s=500; a=350; b=200; c=100; } // 60秒間で50回HITは至難
 
             if(val >= s) return "S";
             if(val >= a) return "A";
@@ -230,14 +237,11 @@
             return "rank-c";
         }
 
-        // ■ レポート機能
         function showReport() {
             menuScreen.style.display = 'none';
             reportScreen.style.display = 'flex';
-            
             const table = document.getElementById('report-table');
             let html = `<tr><th>項目</th><th>今回</th><th>Best (ランク)</th></tr>`;
-            
             const modes = [
                 {id:'saccade', name:'① 跳躍性'},
                 {id:'pursuit', name:'② 追従性'},
@@ -247,20 +251,13 @@
                 {id:'offense', name:'⑥ 攻め'},
                 {id:'rally', name:'⑦ 総合'}
             ];
-
             modes.forEach(m => {
                 const last = lastScores[m.id] !== null ? lastScores[m.id] : "-";
                 const best = bestScores[m.id] !== null ? bestScores[m.id] : "-";
                 const rank = getRank(m.id, bestScores[m.id]);
                 const cls = getRankColor(rank);
-                
-                html += `<tr>
-                    <td>${m.name}</td>
-                    <td>${last}</td>
-                    <td class="${cls}">${best} <small>(${rank})</small></td>
-                </tr>`;
+                html += `<tr><td>${m.name}</td><td>${last}</td><td class="${cls}">${best} <small>(${rank})</small></td></tr>`;
             });
-
             table.innerHTML = html;
         }
         function closeReport() {
@@ -268,7 +265,6 @@
             menuScreen.style.display = 'flex';
         }
 
-        // ■ ゲーム開始
         function startGame(mode) {
             gameMode = mode;
             menuScreen.style.display = 'none';
@@ -283,7 +279,7 @@
             spawnTimer = 0;
 
             if (mode === 'reflex') {
-                hudLeft.innerText = "Reflex Test";
+                hudLeft.innerText = "Reflex";
                 hudRight.innerText = "1/3";
                 reflexData = [];
                 reflexCount = 0;
@@ -311,22 +307,26 @@
             clearInterval(gameTimerId);
             cancelAnimationFrame(animationFrameId);
             
-            // スコア保存
             lastScores[gameMode] = score;
             if (bestScores[gameMode] === null || score > bestScores[gameMode]) {
                 bestScores[gameMode] = score;
             }
 
-            // 結果画面表示
-            document.getElementById('result-title').innerText = "Finish!";
-            document.getElementById('result-main').innerText = `Score: ${score}`;
+            document.getElementById('result-title').innerText = "V24 RESULT";
+            document.getElementById('result-main').innerText = score;
             const rank = getRank(gameMode, score);
-            document.getElementById('result-sub').innerText = `ランク評価: ${rank}`;
             
-            // ★誤操作防止: ボタンを無効化して1.5秒待つ
+            let msg = "";
+            if(rank==="S") msg = "もはや人間卒業レベル...";
+            else if(rank==="A") msg = "素晴らしい！トップアスリート級。";
+            else if(rank==="B") msg = "ナイス！ここからが本番です。";
+            else msg = "まだまだ伸びしろがあります！";
+            
+            document.getElementById('result-sub').innerText = `ランク: ${rank}\n${msg}`;
+            
             closeResultBtn.disabled = true;
             closeResultBtn.style.opacity = 0.5;
-            closeResultBtn.innerText = "Wait...";
+            closeResultBtn.innerText = "Saving...";
             resultScreen.style.display = 'flex';
 
             clearTimeout(resultLockTimer);
@@ -347,25 +347,22 @@
             menuScreen.style.display = 'flex';
         }
 
-        // --- ④ 反射測定 ---
+        // --- 反射測定 ---
         function initReflexRound() {
             reflexCount++;
-            if (reflexCount > REFLEX_MAX_COUNT) {
-                showReflexResult();
-                return;
-            }
+            if (reflexCount > REFLEX_MAX_COUNT) { showReflexResult(); return; }
             hudRight.innerText = `${reflexCount}/${REFLEX_MAX_COUNT}`;
-            
             reflexSignal.style.display = 'flex';
-            reflexSignal.style.backgroundColor = '#b22222'; 
-            reflexSignal.innerText = "WAIT...";
+            reflexSignal.style.backgroundColor = '#8B0000'; 
+            reflexSignal.style.boxShadow = 'none';
+            reflexSignal.innerText = "WAIT";
             reflexState = 'wait';
-
-            const delay = 1500 + Math.random() * 2500; 
+            const delay = 1000 + Math.random() * 3000; 
             reflexTimeout = setTimeout(() => {
                 if(!gameActive) return;
                 reflexState = 'go';
                 reflexSignal.style.backgroundColor = '#00FF7F'; 
+                reflexSignal.style.boxShadow = '0 0 50px #00FF7F';
                 reflexSignal.innerText = "TAP!";
                 reflexStartTime = performance.now();
             }, delay);
@@ -375,9 +372,8 @@
             e.preventDefault();
             if (reflexState === 'wait') {
                 clearTimeout(reflexTimeout);
-                showFeedback("Early!", "red");
-                reflexState = 'idle';
-                reflexCount--; 
+                showFeedback("FOUL!", "red");
+                reflexState = 'idle'; reflexCount--; 
                 setTimeout(initReflexRound, 1000); 
             } else if (reflexState === 'go') {
                 const diff = Math.floor(performance.now() - reflexStartTime);
@@ -392,97 +388,71 @@
 
         function showReflexResult() {
             gameActive = false;
-            let sum = 0;
-            let min = 9999;
-            for(let t of reflexData) {
-                sum += t;
-                if(t < min) min = t;
-            }
+            let sum = 0, min = 9999;
+            for(let t of reflexData) { sum += t; if(t < min) min = t; }
             const avg = Math.floor(sum / reflexData.length);
-            
             lastScores.reflex = avg;
-            if (bestScores.reflex === null || avg < bestScores.reflex) {
-                bestScores.reflex = avg;
-            }
+            if (bestScores.reflex === null || avg < bestScores.reflex) bestScores.reflex = avg;
 
-            document.getElementById('result-title').innerText = "測定結果";
-            document.getElementById('result-main').innerText = `平均: ${avg}ms\n最速: ${min}ms`;
+            document.getElementById('result-title').innerText = "REFLEX RESULT";
+            document.getElementById('result-main').innerText = `Avg: ${avg}ms\nBest: ${min}ms`;
+            const rank = getRank('reflex', avg);
+            document.getElementById('result-sub').innerText = `ランク: ${rank}`;
             
-            let age = "";
-            if (avg < 200) age = "10代後半";
-            else if (avg < 240) age = "20代";
-            else if (avg < 280) age = "30代";
-            else if (avg < 350) age = "40〜50代";
-            else age = "60代以上";
-
-            document.getElementById('result-sub').innerText = `眼年齢: ${age}`;
-            
-            // ロック処理
-            closeResultBtn.disabled = true;
-            closeResultBtn.style.opacity = 0.5;
-            closeResultBtn.innerText = "Wait...";
+            closeResultBtn.disabled = true; closeResultBtn.style.opacity = 0.5; closeResultBtn.innerText = "Wait...";
             resultScreen.style.display = 'flex';
             clearTimeout(resultLockTimer);
-            resultLockTimer = setTimeout(() => {
-                closeResultBtn.disabled = false;
-                closeResultBtn.style.opacity = 1;
-                closeResultBtn.innerText = "メニューに戻る";
-            }, 1500);
+            resultLockTimer = setTimeout(() => { closeResultBtn.disabled = false; closeResultBtn.style.opacity = 1; closeResultBtn.innerText = "メニューに戻る"; }, 1500);
         }
 
         // --- ゲームループ ---
         function update() {
             if (!gameActive) return;
-
-            ctx.fillStyle = "#202020"; ctx.fillRect(0,0,width,height);
-
+            ctx.fillStyle = "#111"; ctx.fillRect(0,0,width,height);
             if(['defense', 'offense', 'rally'].includes(gameMode)) drawCourt();
 
             if (targets.length === 0) {
                 spawnTimer--;
                 if(spawnTimer <= 0) {
                     spawnTarget();
-                    // V23: 基礎トレもテンポよく
+                    // V24: 沸き間隔短縮
                     if(gameMode === 'saccade') spawnTimer = 0; 
-                    else if(gameMode === 'defense' || gameMode === 'offense') spawnTimer = 20;
-                    else spawnTimer = 30;
+                    else if(gameMode === 'defense' || gameMode === 'offense') spawnTimer = 10;
+                    else spawnTimer = 15;
                 }
             }
-
-            updateTargets();
-            updateEffects();
-            drawEffects();
-
+            updateTargets(); updateEffects(); drawEffects();
             animationFrameId = requestAnimationFrame(update);
         }
 
         function drawCourt() {
-            const cx = (width - width*0.9)/2;
-            const cy = height*0.2;
-            const cw = width*0.9;
-            const ch = height*0.6;
-            ctx.strokeStyle = "white"; ctx.lineWidth=3;
+            const cx = (width - width*0.9)/2; const cy = height*0.2;
+            const cw = width*0.9; const ch = height*0.6;
+            ctx.strokeStyle = "#444"; ctx.lineWidth=4;
             ctx.strokeRect(cx, cy, cw, ch);
             ctx.beginPath(); ctx.moveTo(cx, cy+ch/2); ctx.lineTo(cx+cw, cy+ch/2); ctx.stroke();
+            // インエリアの強調
+            ctx.strokeStyle = "#888"; ctx.lineWidth=2; ctx.strokeRect(cx, cy, cw, ch);
         }
 
         function spawnTarget() {
-            // ★ V23: 基礎トレ難易度アップ ★
+            // ① Saccade: 超高速消失
             if (gameMode === 'saccade') {
-                const r = 35;
-                // スコアが上がると寿命が短くなる(最速20フレーム=0.3秒)
-                let life = Math.max(20, 90 - score * 2); 
-                targets.push({ x: Math.random()*(width-2*r)+r, y: Math.random()*(height-2*r)+r, r: r, color: '#00FF7F', type: 'ball', life: life });
+                // スコアに応じてサイズ縮小＆寿命短縮
+                const diff = Math.min(20, score);
+                const r = Math.max(20, 35 - diff);
+                const life = Math.max(15, 60 - diff * 2); // 最速15フレーム(0.25秒)で消える
+                targets.push({ x: Math.random()*(width-2*r)+r, y: Math.random()*(height-2*r)+r, r: r, color: '#00FF7F', type: 'ball', life: life, maxLife: life });
             }
+            // ② Pursuit: 高速化
             else if (gameMode === 'pursuit') {
-                // スコアが上がると速くなる
-                let spd = 0.04 + (score * 0.002);
-                targets.push({ x: width/2, y: height/2, r: 40, color: 'cyan', type: 'moving', angle: 0, speed: spd });
+                let spd = 0.05 + (score * 0.0001); // 徐々に加速
+                targets.push({ x: width/2, y: height/2, r: 35, color: 'cyan', type: 'moving', angle: 0, speed: spd });
             }
+            // ③ Depth: 超ズーム
             else if (gameMode === 'depth') {
-                // スコアが上がるとズームが速くなる
-                let zSpd = 2 + (score * 0.2);
-                targets.push({ x: width/2, y: height/2, r: 10, color: 'yellow', type: 'zoom', growing: true, maxR: 120, zSpeed: zSpd });
+                let zSpd = 3 + (score * 0.1);
+                targets.push({ x: width/2, y: height/2, r: 5, color: 'yellow', type: 'zoom', growing: true, maxR: 110, zSpeed: zSpd });
             }
             // 実戦系
             else {
@@ -495,10 +465,10 @@
                 const startY = height * 0.1;
                 const endY = height * 0.85; 
 
-                // スピード調整
-                let baseSpeed = (type === 'def') ? 12 : 6;
-                // ラリーは後半加速
-                if (gameMode === 'rally') baseSpeed += Math.min(12, score * 0.6);
+                // V24: スピード強化
+                let baseSpeed = (type === 'def') ? 16 : 8; // 初期値から速い
+                if (gameMode === 'rally') baseSpeed += Math.min(15, score * 0.4); // 加速上限アップ
+                if (gameMode === 'defense') baseSpeed += score * 0.2;
 
                 const hitY = (type === 'def') ? height * 0.75 : height * 0.4;
                 
@@ -518,49 +488,55 @@
                 if (t.type === 'ball') {
                     t.life--;
                     if(t.life<=0) targets.splice(i,1); 
-                    else drawCircle(t.x, t.y, t.r, t.color);
+                    else {
+                        // 点滅演出
+                        let alpha = t.life / t.maxLife;
+                        drawCircle(t.x, t.y, t.r, t.color, alpha);
+                    }
                 }
                 else if (t.type === 'moving') {
                     t.angle += t.speed;
-                    t.x = width/2 + Math.cos(t.angle)* (width*0.4);
-                    t.y = height/2 + Math.sin(t.angle*2) * (height*0.25);
+                    t.x = width/2 + Math.cos(t.angle * 1.5)* (width*0.4);
+                    t.y = height/2 + Math.sin(t.angle * 2.3) * (height*0.25);
+                    
                     let isTracking = false;
                     if(isTouching) {
-                        if(Math.hypot(t.x - touchX, t.y - touchY) < t.r + 30) isTracking = true;
+                        // 判定も厳しく
+                        if(Math.hypot(t.x - touchX, t.y - touchY) < t.r + 10) isTracking = true;
                     }
                     if(isTracking) {
-                        score++; hudLeft.innerText = `Score: ${score}`;
-                        drawCircle(t.x, t.y, t.r, "magenta");
+                        // V24: スコア加算頻度を下げる（インフレ防止）
+                        if(frameCount % 3 === 0) {
+                            score++; hudLeft.innerText = `Score: ${score}`;
+                        }
+                        drawCircle(t.x, t.y, t.r, "magenta", 1);
                     } else {
-                        drawCircle(t.x, t.y, t.r, "cyan");
+                        drawCircle(t.x, t.y, t.r, "cyan", 1);
                     }
                 }
                 else if (t.type === 'zoom') {
                     if(t.growing) { t.r += t.zSpeed; if(t.r >= t.maxR) t.growing = false; } 
-                    else { t.r -= t.zSpeed; if(t.r <= 10) t.growing = true; }
-                    const color = (t.r > t.maxR*0.8) ? "yellow" : "#555";
-                    drawCircle(t.x, t.y, t.r, color);
+                    else { t.r -= t.zSpeed; if(t.r <= 5) t.growing = true; }
+                    const color = (t.r > t.maxR*0.85) ? "yellow" : "#444";
+                    drawCircle(t.x, t.y, t.r, color, 1);
                 }
                 else if (t.type === 'shuttle') {
                     t.y += t.speed;
-                    
                     let progress = (t.y - (height*0.1)) / (height*0.75);
                     if(progress < 0) progress = 0; if(progress > 1) progress = 1;
                     
-                    const currentR = 20 + (progress * 30); 
-                    const zoneSize = 80 + (progress * 20);
-                    let isHittable = false;
+                    const currentR = 15 + (progress * 35); 
+                    const zoneSize = 60; // V24: 判定ゾーン狭小化 (80->60)
                     
-                    if (t.y > t.hitY - zoneSize && t.y < t.hitY + zoneSize) {
-                        isHittable = true;
-                    }
+                    let isHittable = false;
+                    if (t.y > t.hitY - zoneSize && t.y < t.hitY + zoneSize) isHittable = true;
 
                     if (isHittable) {
                         t.state = 'yellow';
-                        drawShuttle(t.x, t.y, currentR, "yellow");
+                        drawShuttle(t.x, t.y, currentR, "#FFD700");
                     } else {
                         t.state = 'white';
-                        if(t.y > t.hitY + zoneSize) drawShuttle(t.x, t.y, currentR, "gray");
+                        if(t.y > t.hitY + zoneSize) drawShuttle(t.x, t.y, currentR, "#555");
                         else drawShuttle(t.x, t.y, currentR, "white");
                     }
 
@@ -571,24 +547,10 @@
                 }
             }
         }
-
-        function drawCircle(x, y, r, color) {
-            ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI*2);
-            ctx.fillStyle = color; ctx.fill();
-            ctx.strokeStyle = "white"; ctx.lineWidth=2; ctx.stroke();
-        }
-
-        function drawShuttle(x, y, r, color) {
-            ctx.fillStyle = color;
-            ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI*2); ctx.fill();
-            ctx.fillStyle = "rgba(255,255,255,0.5)";
-            ctx.beginPath(); ctx.moveTo(x,y); 
-            ctx.lineTo(x-r*0.8, y-r*1.5); 
-            ctx.lineTo(x+r*0.8, y-r*1.5); 
-            ctx.fill();
-        }
-
+        
+        let frameCount = 0;
         function updateEffects() {
+            frameCount++;
             for(let i=effects.length-1; i>=0; i--) {
                 let e = effects[i]; e.life--; e.r+=5;
                 if(e.life<=0) effects.splice(i,1);
@@ -598,22 +560,36 @@
             ctx.save();
             for(let e of effects) {
                 ctx.beginPath(); ctx.arc(e.x, e.y, e.r, 0, Math.PI*2);
-                ctx.strokeStyle = `rgba(0,255,255,${e.life/10})`; ctx.lineWidth=4; ctx.stroke();
+                ctx.strokeStyle = `rgba(255,69,0,${e.life/10})`; ctx.lineWidth=5; ctx.stroke();
             }
             ctx.restore();
+        }
+        
+        function drawCircle(x, y, r, color, alpha) {
+            ctx.globalAlpha = alpha;
+            ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI*2);
+            ctx.fillStyle = color; ctx.fill();
+            ctx.strokeStyle = "white"; ctx.lineWidth=2; ctx.stroke();
+            ctx.globalAlpha = 1.0;
+        }
+
+        function drawShuttle(x, y, r, color) {
+            ctx.fillStyle = color;
+            ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI*2); ctx.fill();
+            ctx.fillStyle = "rgba(255,255,255,0.3)";
+            ctx.beginPath(); ctx.moveTo(x,y); 
+            ctx.lineTo(x-r*0.7, y-r*1.4); 
+            ctx.lineTo(x+r*0.7, y-r*1.4); 
+            ctx.fill();
         }
 
         function handleStart(e) {
             if(!gameActive) return;
             const touches = e.changedTouches || [e];
-            for(let t of touches) {
-                touchX = t.clientX; touchY = t.clientY; isTouching = true;
-                checkHit(touchX, touchY);
-            }
+            for(let t of touches) { touchX = t.clientX; touchY = t.clientY; isTouching = true; checkHit(touchX, touchY); }
         }
         function handleMove(e) {
-            if(!gameActive) return;
-            e.preventDefault(); 
+            if(!gameActive) return; e.preventDefault(); 
             const touches = e.changedTouches || [e];
             for(let t of touches) { touchX = t.clientX; touchY = t.clientY; }
         }
@@ -624,32 +600,32 @@
 
             for(let i=targets.length-1; i>=0; i--) {
                 const t = targets[i];
-                let hit = false;
-                let pts = 0;
-                let msg = "";
+                let hit = false; let pts = 0; let msg = "";
 
+                // V24: 判定半径を縮小（精密さ要求）
                 if (t.type === 'ball') { 
-                    if(Math.hypot(t.x-tx, t.y-ty) < t.r+30) { hit = true; pts = 10; msg = "+10"; }
+                    if(Math.hypot(t.x-tx, t.y-ty) < t.r + 10) { hit = true; pts = 1; msg = "HIT"; }
                 }
                 else if (t.type === 'zoom') { 
-                    if(Math.hypot(t.x-tx, t.y-ty) < t.r+30) {
-                        if (t.r > t.maxR*0.8) { hit = true; pts = 20; msg = "GOOD!"; }
-                        else { showFeedback("WAIT...", "orange"); return; }
+                    if(Math.hypot(t.x-tx, t.y-ty) < t.r + 10) {
+                        if (t.r > t.maxR*0.9) { hit = true; pts = 5; msg = "JUST!"; } // 判定厳しく
+                        else { showFeedback("WAIT", "orange"); return; }
                     }
                 }
                 else if (t.type === 'shuttle') { 
                     let progress = (t.y - (height*0.1)) / (height*0.75);
-                    const currentR = 20 + (progress * 30); 
+                    const currentR = 15 + (progress * 35);
                     
-                    if(Math.hypot(t.x-tx, t.y-ty) < currentR + 50) {
+                    // 判定激辛化
+                    if(Math.hypot(t.x-tx, t.y-ty) < currentR + 20) {
                         if(t.state === 'yellow') {
-                            hit = true; pts = 10; msg = "NICE!";
+                            hit = true; pts = 10; msg = "NICE";
                         } else {
-                            if (t.y > t.hitY - 120 && t.y < t.hitY + 120) {
-                                hit = true; pts = 5; msg = "OK";
+                            // 先行入力は厳しくチェック
+                            if (t.y > t.hitY - 60 && t.y < t.hitY + 60) {
+                                hit = true; pts = 5; msg = "GOOD";
                             } else {
-                                showFeedback("TIMING...", "orange");
-                                return; 
+                                showFeedback("EARLY", "orange"); return; 
                             }
                         }
                     }
@@ -661,7 +637,7 @@
                     showFeedback(msg, "cyan");
                     spawnEffect(t.x, t.y);
                     targets.splice(i, 1);
-                    spawnTimer = (gameMode==='saccade') ? 5 : 20;
+                    if(gameMode!=='saccade') spawnTimer = 5; // 即沸き
                     break;
                 }
             }
@@ -669,7 +645,7 @@
 
         function showFeedback(text, color) {
             feedbackEl.innerText = text; feedbackEl.style.color = color;
-            feedbackEl.style.opacity = 1; setTimeout(()=>feedbackEl.style.opacity=0, 500);
+            feedbackEl.style.opacity = 1; setTimeout(()=>feedbackEl.style.opacity=0, 400);
         }
 
         window.addEventListener('mousedown', handleStart);
