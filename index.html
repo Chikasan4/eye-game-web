@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Badminton Vision V40</title>
+    <title>Badminton Vision V41</title>
     <style>
         body {
             margin: 0; overflow: hidden;
@@ -23,7 +23,7 @@
         
         #combo-display { 
             color: #FFD700; font-size: 24px; font-weight:900; 
-            text-align: center; width: 100%; position: absolute; top: 60px; 
+            text-align: center; width: 100%; position: absolute; top: 80px; 
             opacity: 0; transition: opacity 0.1s; text-shadow: 0 0 10px orange;
         }
 
@@ -33,10 +33,12 @@
         }
         #diff-val { font-size: 20px; font-weight: bold; color: white; }
 
+        /* ★修正: ガイドを上部に移動し、邪魔にならないように */
         #action-guide {
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            font-size: 40px; font-weight: 900; color: rgba(255,255,255,0.15);
-            pointer-events: none; white-space: pre-line; z-index: 5; text-align: center; line-height: 1.5;
+            position: absolute; top: 15%; left: 50%; transform: translate(-50%, 0);
+            font-size: 24px; font-weight: bold; color: rgba(255,255,255,0.7);
+            pointer-events: none; white-space: pre-line; z-index: 5; text-align: center; line-height: 1.4;
+            text-shadow: 1px 1px 2px black;
         }
 
         #menu-screen {
@@ -106,7 +108,7 @@
 <body>
 
     <div id="menu-screen">
-        <h1>Badminton Vision V40<br><span style="font-size:12px; color:#aaa;">CHOICE & SKILL</span></h1>
+        <h1>Badminton Vision V41<br><span style="font-size:12px; color:#aaa;">CLEAR VIEW</span></h1>
         
         <div class="btn btn-report" onclick="showReport()">📊 総合レポート</div>
 
@@ -298,7 +300,7 @@
             updateDiffDisplay();
 
             if(mode === 'defense') actionGuideEl.innerText = "TAP!";
-            // ★ V40: ガイド更新
+            // ★ V41: ガイド位置修正済
             if(mode === 'offense') actionGuideEl.innerText = "🔴 ↓ SMASH\n🔵 ↔ CUT";
             if(mode === 'rally') actionGuideEl.innerText = "MIX!";
 
@@ -394,13 +396,11 @@
                 spawnTimer--;
                 if(spawnTimer <= 0) {
                     spawnTarget();
-                    // V40: 実戦は超連射
+                    const base = (gameMode==='depth') ? 25 : 40; 
                     if(gameMode==='defense'||gameMode==='offense'||gameMode==='rally') {
                         spawnTimer = Math.max(5, 20 - currentDifficulty*15); 
-                    } else if (gameMode==='depth') {
-                        spawnTimer = Math.max(10, 25 - currentDifficulty*20);
                     } else {
-                        spawnTimer = Math.max(10, 35 - currentDifficulty*25);
+                        spawnTimer = Math.max(10, base - (currentDifficulty * 20));
                     }
                     if(gameMode==='saccade') spawnTimer = 0;
                 }
@@ -444,7 +444,6 @@
                 let type = 'rally';
                 if(gameMode === 'defense') type = 'def';
                 else if(gameMode === 'offense') {
-                    // ★ V40: Offense = Smash(Red) or Cut(Blue)
                     type = (Math.random() < 0.6) ? 'off_smash' : 'off_cut';
                 }
                 else {
@@ -471,7 +470,6 @@
                     });
                 } 
                 else if (type === 'off_smash') {
-                    // 赤：スマッシュ（↓）
                     let targetY = height * 0.3; 
                     targets.push({
                         x: startX, y: targetY, r: 10,
@@ -482,14 +480,12 @@
                     });
                 }
                 else if (type === 'off_cut') {
-                    // 青：カット（↔）
-                    // 少し低い位置に出る
                     let targetY = height * 0.4; 
                     targets.push({
                         x: startX, y: targetY, r: 10,
                         type: 'lob_cut', mode: type,
                         speed: 0, state: 'hang',
-                        hitY: targetY, hangTime: 35, // 少し早い
+                        hitY: targetY, hangTime: 35, 
                         endY: endY, isHit: false
                     });
                 }
@@ -557,7 +553,6 @@
                     if (t.y > height + 50) { if (!t.isHit) { showFeedback("MISS", "gray"); adjustDifficulty(false); targets.splice(i, 1); } }
                 }
                 else if (t.type === 'lob_smash' || t.type === 'lob_cut') {
-                    // Offense: 2種類
                     if (t.state === 'hang') {
                         t.hangTime--;
                         if (t.hangTime <= 0) t.state = 'falling';
@@ -566,7 +561,6 @@
                     }
                     
                     let currentR = 50; 
-                    // 赤(Smash) or 青(Cut)
                     let color = (t.type === 'lob_smash') ? "#FF4500" : "#00BFFF";
                     if (t.state === 'falling') color = "gray";
                     drawShuttle(t.x, t.y, currentR, color);
@@ -620,7 +614,6 @@
             ctx.lineTo(x-r*0.7, y-r*1.4); ctx.lineTo(x+r*0.7, y-r*1.4); ctx.fill();
         }
 
-        // 入力処理（タップ＆スワイプ）
         function handleStart(e) {
             if(!gameActive) return;
             const touches = e.changedTouches || [e];
@@ -628,7 +621,6 @@
                 startX = t.clientX; startY = t.clientY;
                 currentX = startX; currentY = startY;
                 isTouching = true; 
-                // Defenseはタップ
                 if(gameMode !== 'offense') checkHit(startX, startY, 'tap');
             }
         }
@@ -645,8 +637,6 @@
             for(let t of touches) {
                 let dx = t.clientX - startX;
                 let dy = t.clientY - startY;
-                
-                // スワイプ判定 (感度30px)
                 if (dy > 30 && Math.abs(dx) < 30) {
                     checkHit(startX, startY, 'swipe_down');
                 } else if (Math.abs(dx) > 30 && Math.abs(dy) < 30) {
@@ -665,43 +655,38 @@
 
                 let hit = false; let pts = 0; let msg = "";
 
-                // ① Saccade
                 if (t.type === 'ball') { 
                     if(actionType === 'tap' && Math.hypot(t.x-tx, t.y-ty) < t.r + 20) { hit = true; pts = 10; msg = "HIT"; }
                 }
-                // ③ Depth
                 else if (t.type === 'zoom') { 
                     if(actionType === 'tap' && Math.hypot(t.x-tx, t.y-ty) < t.r + 20) {
                         if (t.r > t.maxR*0.8) { hit = true; pts = 70; msg = "GOOD!"; }
                         else { showFeedback("WAIT", "orange"); return; }
                     }
                 }
-                // ⑤ Defense
                 else if (t.type === 'shuttle') { 
                     if(actionType === 'tap' && Math.hypot(t.x-tx, t.y-ty) < 70) {
                         if(t.state === 'yellow') { hit = true; pts = 50; msg = "NICE"; }
                         else { showFeedback("TIMING...", "orange"); return; }
                     }
                 }
-                // ⑥ Offense (Choice)
                 else if (t.type === 'lob_smash') {
-                    // 赤：下スワイプのみ
                     if(Math.hypot(t.x-tx, t.y-ty) < 100 && t.state === 'hang') {
                         if(actionType === 'swipe_down') { hit = true; pts = 50; msg = "SMASH!!"; } 
                         else if(actionType === 'swipe_side') { showFeedback("WRONG!", "red"); adjustDifficulty(false); targets.splice(i,1); return; }
                     }
                 }
                 else if (t.type === 'lob_cut') {
-                    // 青：横スワイプのみ
                     if(Math.hypot(t.x-tx, t.y-ty) < 100 && t.state === 'hang') {
                         if(actionType === 'swipe_side') { hit = true; pts = 50; msg = "CUT!"; } 
                         else if(actionType === 'swipe_down') { showFeedback("WRONG!", "red"); adjustDifficulty(false); targets.splice(i,1); return; }
                     }
                 }
-                // ⑦ Feint (Touch)
                 else if (t.type === 'feint') {
                     if(Math.hypot(t.x-tx, t.y-ty) < 70) {
-                        if(t.state === 'yellow') { hit = true; pts = 100; msg = "READ!"; } 
+                        if(t.state === 'yellow') { 
+                            hit = true; pts = 100; msg = "READ!"; 
+                        } 
                     }
                 }
 
