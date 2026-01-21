@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Badminton Vision V21</title>
+    <title>Badminton Vision V22</title>
     <style>
         body {
             margin: 0; overflow: hidden;
@@ -21,13 +21,14 @@
         }
         .hud { font-size: 18px; font-weight: bold; text-shadow: 1px 1px 2px black; }
         
+        /* メニュー画面 */
         #menu-screen {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background-color: #1a1a1a; display: flex; flex-direction: column;
             align-items: center; justify-content: flex-start; z-index: 100;
-            overflow-y: auto; padding-top: 20px;
+            overflow-y: auto; padding-top: 20px; padding-bottom: 40px;
         }
-        h1 { margin: 10px 0 20px 0; font-size: 22px; text-align: center; color: #00FF7F; border-bottom: 2px solid #00FF7F; padding-bottom: 5px; }
+        h1 { margin: 10px 0 10px 0; font-size: 22px; text-align: center; color: #00FF7F; border-bottom: 2px solid #00FF7F; padding-bottom: 5px; }
         
         .section-title {
             color: #aaa; font-size: 14px; margin-top: 15px; margin-bottom: 5px; 
@@ -44,11 +45,13 @@
         }
         .btn:active { transform: scale(0.96); background-color: #555; }
         
+        /* 色分け */
         .btn-vision { background-color: #444; border-color: #00FF7F; color: #00FF7F; }
         .btn-measure { background-color: #b22222; border-color: #ff6347; color: white; }
         .btn-def { background-color: #4682B4; border-color: #87CEEB; }
         .btn-off { background-color: #DAA520; border-color: #FFD700; color: #000; }
         .btn-rally { background-color: #2E8B57; border-color: #98FB98; }
+        .btn-report { background-color: #8A2BE2; border-color: #DA70D6; margin-top: 20px; }
 
         #feedback-msg {
             position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%);
@@ -56,14 +59,20 @@
             transition: opacity 0.1s; text-shadow: 2px 2px 0 #000; z-index: 20; white-space: nowrap;
         }
 
-        #result-screen {
+        /* 結果・レポート画面 */
+        #result-screen, #report-screen {
             display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background-color: rgba(0,0,0,0.95); flex-direction: column;
-            align-items: center; justify-content: center; z-index: 50;
+            align-items: center; justify-content: center; z-index: 150;
         }
         #result-title { font-size: 24px; margin-bottom: 10px; color: #ccc; }
         #result-main { font-size: 32px; font-weight: bold; color: #00FF7F; margin-bottom: 10px; text-align: center; white-space: pre-line;}
         #result-sub { font-size: 18px; color: white; margin-bottom: 30px; text-align: center; line-height: 1.5; padding: 0 20px;}
+        
+        /* レポート表 */
+        table { border-collapse: collapse; width: 90%; max-width: 400px; color: white; margin-bottom: 20px; }
+        th, td { border: 1px solid #555; padding: 8px; text-align: center; }
+        th { background-color: #333; color: #00FF7F; }
         
         #reflex-signal {
             display: none; position: absolute; top: 50%; left: 50%; 
@@ -71,7 +80,7 @@
             transform: translate(-50%, -50%);
             background-color: #333; border: 5px solid #555;
             z-index: 10; cursor: pointer;
-            display: flex; align-items: center; justify-content: center;
+            align-items: center; justify-content: center;
             font-size: 30px; font-weight: bold; color: white;
             user-select: none;
         }
@@ -80,20 +89,22 @@
 <body>
 
     <div id="menu-screen">
-        <h1>Badminton Vision V21</h1>
+        <h1>Badminton Vision V22</h1>
         
+        <div class="btn btn-report" onclick="showReport()">📊 総合レポートを見る</div>
+
         <div class="section-title">【A】基礎・眼球トレ</div>
-        <div class="btn btn-vision" onclick="startGame('saccade')">① 跳躍性 (タップで加点)</div>
-        <div class="btn btn-vision" onclick="startGame('pursuit')">② 追従性 (なぞって加点)</div>
-        <div class="btn btn-vision" onclick="startGame('depth')">③ 深視力 (ズーム)</div>
+        <div class="btn btn-vision" onclick="startGame('saccade')">① 跳躍性 (TAP)</div>
+        <div class="btn btn-vision" onclick="startGame('pursuit')">② 追従性 (TRACE)</div>
+        <div class="btn btn-vision" onclick="startGame('depth')">③ 深視力 (ZOOM)</div>
 
         <div class="section-title">【B】測定</div>
-        <div class="btn btn-measure" onclick="startGame('reflex')">④ 反射神経 (3回平均＆最高)</div>
+        <div class="btn btn-measure" onclick="startGame('reflex')">④ 反射神経 (AGE TEST)</div>
 
-        <div class="section-title">【C】実戦 (色ナビ修正版)</div>
-        <div class="btn btn-def" onclick="startGame('defense')">⑤ 守り (黄色でタップ)</div>
-        <div class="btn btn-off" onclick="startGame('offense')">⑥ 攻め (頂点でタップ)</div>
-        <div class="btn btn-rally" onclick="startGame('rally')">⑦ 総合 (ランダム)</div>
+        <div class="section-title">【C】実戦 (遠近予測版)</div>
+        <div class="btn btn-def" onclick="startGame('defense')">⑤ 守り (レシーブ)</div>
+        <div class="btn btn-off" onclick="startGame('offense')">⑥ 攻め (スマッシュ)</div>
+        <div class="btn btn-rally" onclick="startGame('rally')">⑦ 総合 (加速ラリー)</div>
     </div>
 
     <div id="game-container">
@@ -113,12 +124,20 @@
         <div class="btn" style="background:#fff; color:#333;" onclick="backToMenu()">メニューに戻る</div>
     </div>
 
+    <div id="report-screen">
+        <h2 style="color:#00FF7F; margin-bottom:20px;">TOTAL REPORT</h2>
+        <table id="report-table">
+            </table>
+        <div class="btn" style="background:#fff; color:#333;" onclick="closeReport()">閉じる</div>
+    </div>
+
     <script>
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
         const menuScreen = document.getElementById('menu-screen');
         const gameContainer = document.getElementById('game-container');
         const resultScreen = document.getElementById('result-screen');
+        const reportScreen = document.getElementById('report-screen');
         const hudLeft = document.getElementById('hud-left');
         const hudRight = document.getElementById('hud-right');
         const feedbackEl = document.getElementById('feedback-msg');
@@ -135,15 +154,21 @@
         let animationFrameId;
         let gameTimerId;
 
+        // 自己ベスト記録用オブジェクト
+        const bestScores = {
+            saccade: 0, pursuit: 0, depth: 0, 
+            reflex: null, // nullは未測定
+            defense: 0, offense: 0, rally: 0
+        };
+
         // 反射測定用
-        let reflexData = []; // 計測結果を保存
-        let reflexCount = 0; // 現在の回数
-        const REFLEX_MAX_COUNT = 3; // 3回計測
+        let reflexData = [];
+        let reflexCount = 0;
+        const REFLEX_MAX_COUNT = 3; 
         let reflexStartTime = 0;
-        let reflexState = 'idle'; // idle, wait, ready, result
+        let reflexState = 'idle';
         let reflexTimeout;
 
-        // タッチ状態管理（追従モード用）
         let isTouching = false;
         let touchX = 0, touchY = 0;
 
@@ -156,6 +181,31 @@
         window.addEventListener('resize', resize);
         resize();
 
+        // ■ レポート機能
+        function showReport() {
+            menuScreen.style.display = 'none';
+            reportScreen.style.display = 'flex';
+            
+            const table = document.getElementById('report-table');
+            let reflexText = bestScores.reflex ? `${bestScores.reflex}ms` : "---";
+            
+            table.innerHTML = `
+                <tr><th>項目</th><th>Best Score</th></tr>
+                <tr><td>① 跳躍性</td><td>${bestScores.saccade}</td></tr>
+                <tr><td>② 追従性</td><td>${bestScores.pursuit}</td></tr>
+                <tr><td>③ 深視力</td><td>${bestScores.depth}</td></tr>
+                <tr><td>④ 反射神経</td><td>${reflexText}</td></tr>
+                <tr><td>⑤ 守り</td><td>${bestScores.defense}</td></tr>
+                <tr><td>⑥ 攻め</td><td>${bestScores.offense}</td></tr>
+                <tr><td>⑦ 総合</td><td>${bestScores.rally}</td></tr>
+            `;
+        }
+        function closeReport() {
+            reportScreen.style.display = 'none';
+            menuScreen.style.display = 'flex';
+        }
+
+        // ■ ゲーム開始
         function startGame(mode) {
             gameMode = mode;
             menuScreen.style.display = 'none';
@@ -171,7 +221,7 @@
 
             if (mode === 'reflex') {
                 hudLeft.innerText = "Reflex Test";
-                hudRight.innerText = "Attempt: 1/3";
+                hudRight.innerText = "1/3";
                 reflexData = [];
                 reflexCount = 0;
                 initReflexRound();
@@ -198,13 +248,14 @@
             clearInterval(gameTimerId);
             cancelAnimationFrame(animationFrameId);
             
+            // スコア保存（ベスト更新なら上書き）
+            if (score > bestScores[gameMode]) {
+                bestScores[gameMode] = score;
+            }
+
             document.getElementById('result-title').innerText = "Finish!";
             document.getElementById('result-main').innerText = `Score: ${score}`;
-            let sub = "";
-            if(gameMode === 'saccade') sub = "周辺視野トレーニング完了";
-            if(gameMode === 'pursuit') sub = "眼球追従トレーニング完了";
-            if(gameMode === 'depth') sub = "深視力トレーニング完了";
-            document.getElementById('result-sub').innerText = sub;
+            document.getElementById('result-sub').innerText = "お疲れ様でした！";
             resultScreen.style.display = 'flex';
         }
 
@@ -218,25 +269,25 @@
             menuScreen.style.display = 'flex';
         }
 
-        // --- ④ 反射測定ロジック (3回計測・平均・最高) ---
+        // --- ④ 反射測定ロジック ---
         function initReflexRound() {
             reflexCount++;
             if (reflexCount > REFLEX_MAX_COUNT) {
                 showReflexResult();
                 return;
             }
-            hudRight.innerText = `Attempt: ${reflexCount}/${REFLEX_MAX_COUNT}`;
+            hudRight.innerText = `${reflexCount}/${REFLEX_MAX_COUNT}`;
             
             reflexSignal.style.display = 'flex';
-            reflexSignal.style.backgroundColor = '#b22222'; // Red
+            reflexSignal.style.backgroundColor = '#b22222'; 
             reflexSignal.innerText = "WAIT...";
             reflexState = 'wait';
 
-            const delay = 1500 + Math.random() * 2500; // 1.5~4秒ランダム
+            const delay = 1500 + Math.random() * 2500; 
             reflexTimeout = setTimeout(() => {
                 if(!gameActive) return;
                 reflexState = 'go';
-                reflexSignal.style.backgroundColor = '#00FF7F'; // Green
+                reflexSignal.style.backgroundColor = '#00FF7F'; 
                 reflexSignal.innerText = "TAP!";
                 reflexStartTime = performance.now();
             }, delay);
@@ -247,16 +298,16 @@
             if (reflexState === 'wait') {
                 clearTimeout(reflexTimeout);
                 showFeedback("Early!", "red");
+                // ペナルティ：やり直し
                 reflexState = 'idle';
-                // ペナルティとしてやり直し（カウントは進めない、またはそのままやり直し）
-                setTimeout(initReflexRound, 1000); // 1秒後再開 (カウント戻す処理は省略し、同じ回数やり直しとする)
                 reflexCount--; 
+                setTimeout(initReflexRound, 1000); 
             } else if (reflexState === 'go') {
                 const diff = Math.floor(performance.now() - reflexStartTime);
                 reflexData.push(diff);
                 showFeedback(`${diff}ms`, "cyan");
                 reflexState = 'idle';
-                setTimeout(initReflexRound, 1000); // 1秒後次へ
+                setTimeout(initReflexRound, 1000); 
             }
         }
         reflexSignal.addEventListener('mousedown', handleReflexClick);
@@ -264,7 +315,6 @@
 
         function showReflexResult() {
             gameActive = false;
-            // 平均と最高を計算
             let sum = 0;
             let min = 9999;
             for(let t of reflexData) {
@@ -273,44 +323,43 @@
             }
             const avg = Math.floor(sum / reflexData.length);
             
+            // ベストスコア保存（低いほうが良い）
+            if (bestScores.reflex === null || avg < bestScores.reflex) {
+                bestScores.reflex = avg;
+            }
+
             document.getElementById('result-title').innerText = "測定結果";
-            document.getElementById('result-main').innerText = `平均: ${avg}ms\n最高: ${min}ms`;
+            document.getElementById('result-main').innerText = `平均: ${avg}ms\n最速: ${min}ms`;
             
             let age = "";
-            if (avg < 200) age = "10代後半 (アスリート)";
-            else if (avg < 240) age = "20代 (素晴らしい)";
-            else if (avg < 280) age = "30代 (平均的)";
+            if (avg < 200) age = "10代後半";
+            else if (avg < 240) age = "20代";
+            else if (avg < 280) age = "30代";
             else if (avg < 350) age = "40〜50代";
-            else age = "60代以上 (安全第一)";
+            else age = "60代以上";
 
-            document.getElementById('result-sub').innerText = `あなたの眼年齢: ${age}`;
+            document.getElementById('result-sub').innerText = `眼年齢: ${age}`;
             resultScreen.style.display = 'flex';
         }
-
 
         // --- ゲームループ ---
         function update() {
             if (!gameActive) return;
 
-            // 背景
             ctx.fillStyle = "#202020"; ctx.fillRect(0,0,width,height);
 
-            // コート描画（実戦系のみ）
             if(['defense', 'offense', 'rally'].includes(gameMode)) drawCourt();
 
-            // スポーン
             if (targets.length === 0) {
                 spawnTimer--;
                 if(spawnTimer <= 0) {
                     spawnTarget();
-                    // モード別間隔
                     if(gameMode === 'saccade') spawnTimer = 0; 
                     else if(gameMode === 'defense' || gameMode === 'offense') spawnTimer = 20;
                     else spawnTimer = 30;
                 }
             }
 
-            // 更新＆描画
             updateTargets();
             updateEffects();
             drawEffects();
@@ -319,7 +368,6 @@
         }
 
         function drawCourt() {
-            // シンプルなコート
             const cx = (width - width*0.9)/2;
             const cy = height*0.2;
             const cw = width*0.9;
@@ -330,45 +378,42 @@
         }
 
         function spawnTarget() {
-            // ① Saccade: ランダム配置
+            // 眼球トレ系は前回と同じ
             if (gameMode === 'saccade') {
                 const r = 35;
-                targets.push({
-                    x: Math.random()*(width-2*r)+r, y: Math.random()*(height-2*r)+r,
-                    r: r, color: '#00FF7F', type: 'ball', life: 90
-                });
+                targets.push({ x: Math.random()*(width-2*r)+r, y: Math.random()*(height-2*r)+r, r: r, color: '#00FF7F', type: 'ball', life: 90 });
             }
-            // ② Pursuit: 8の字
             else if (gameMode === 'pursuit') {
-                targets.push({
-                    x: width/2, y: height/2, r: 40, color: 'cyan', type: 'moving',
-                    angle: 0, speed: 0.04
-                });
+                targets.push({ x: width/2, y: height/2, r: 40, color: 'cyan', type: 'moving', angle: 0, speed: 0.04 });
             }
-            // ③ Depth: ズーム
             else if (gameMode === 'depth') {
-                targets.push({
-                    x: width/2, y: height/2, r: 10, color: 'yellow', type: 'zoom',
-                    growing: true, maxR: 120
-                });
+                targets.push({ x: width/2, y: height/2, r: 10, color: 'yellow', type: 'zoom', growing: true, maxR: 120 });
             }
-            // 実戦系 (色ナビ)
+            // ★ 実戦系 (V22 改良版) ★
             else {
-                // defense, offense, rally
-                // シンプルに上から落ちてくるが、「色が変わった瞬間」が打点
-                const type = (gameMode === 'rally') ? (Math.random()<0.5 ? 'def' : 'off') : (gameMode === 'defense' ? 'def' : 'off');
+                let type = 'rally';
+                if(gameMode === 'defense') type = 'def';
+                else if(gameMode === 'offense') type = 'off';
+                else type = (Math.random()<0.5) ? 'def' : 'off';
                 
                 const startX = Math.random() * (width*0.8) + width*0.1;
                 const startY = height * 0.1;
-                const endY = height * 0.85;
-                const speed = (type === 'def') ? 15 : 8; // 守りは速い、攻めは遅い（タメる）
-                
-                // タイミング（defは手元、offは頂点=画面中央付近）
+                const endY = height * 0.85; // 画面下部
+
+                // スピード調整：ラリーはスコアに応じて加速
+                let baseSpeed = (type === 'def') ? 12 : 6;
+                if (gameMode === 'rally') {
+                    // スコアが上がるほど速くなる（上限あり）
+                    baseSpeed += Math.min(10, score * 0.5);
+                }
+
+                // タイミングライン（打点）
                 const hitY = (type === 'def') ? height * 0.75 : height * 0.4;
                 
                 targets.push({
-                    x: startX, y: startY, r: 30, type: 'shuttle', mode: type,
-                    speed: speed, hitY: hitY, state: 'white', // white -> yellow
+                    x: startX, y: startY, r: 10, // 最初は小さい
+                    type: 'shuttle', mode: type,
+                    speed: baseSpeed, hitY: hitY, state: 'white',
                     endY: endY
                 });
             }
@@ -378,69 +423,64 @@
             for (let i = targets.length - 1; i >= 0; i--) {
                 const t = targets[i];
 
-                // ① Saccade
                 if (t.type === 'ball') {
                     t.life--;
-                    if(t.life<=0) targets.splice(i,1); // 時間切れ消滅
+                    if(t.life<=0) targets.splice(i,1); 
                     else drawCircle(t.x, t.y, t.r, t.color);
                 }
-                // ② Pursuit (なぞり)
                 else if (t.type === 'moving') {
                     t.angle += t.speed;
                     t.x = width/2 + Math.cos(t.angle)* (width*0.4);
                     t.y = height/2 + Math.sin(t.angle*2) * (height*0.25);
-                    
-                    // なぞり判定
                     let isTracking = false;
                     if(isTouching) {
-                        const d = Math.hypot(t.x - touchX, t.y - touchY);
-                        if(d < t.r + 30) isTracking = true;
+                        if(Math.hypot(t.x - touchX, t.y - touchY) < t.r + 30) isTracking = true;
                     }
-
                     if(isTracking) {
-                        score++; // なぞってる間すごい勢いで増える
-                        hudLeft.innerText = `Score: ${score}`;
-                        drawCircle(t.x, t.y, t.r, "magenta"); // 色が変わる
-                        if(score % 5 === 0) effects.push({x:t.x, y:t.y, life:5, r:t.r}); // エフェクト
+                        score++; hudLeft.innerText = `Score: ${score}`;
+                        drawCircle(t.x, t.y, t.r, "magenta");
                     } else {
                         drawCircle(t.x, t.y, t.r, "cyan");
                     }
                 }
-                // ③ Depth
                 else if (t.type === 'zoom') {
-                    if(t.growing) {
-                        t.r += 2;
-                        if(t.r >= t.maxR) t.growing = false;
-                    } else {
-                        t.r -= 2;
-                        if(t.r <= 10) t.growing = true;
-                    }
-                    // 最大付近で色が黄色になる（ヒント）
+                    if(t.growing) { t.r += 2; if(t.r >= t.maxR) t.growing = false; } 
+                    else { t.r -= 2; if(t.r <= 10) t.growing = true; }
                     const color = (t.r > t.maxR*0.8) ? "yellow" : "#555";
                     drawCircle(t.x, t.y, t.r, color);
                 }
-                // 実戦系
+                // ★ シャトル (遠近法＆色ナビ)
                 else if (t.type === 'shuttle') {
                     t.y += t.speed;
                     
-                    // 色ナビロジック
-                    // ターゲットゾーンに入ったら黄色（打て！）
-                    // Offense(攻め): 頂点付近で一瞬黄色
-                    // Defense(守り): 手元に来たら黄色
+                    // 遠近法：Y座標が進むほど大きくする
+                    // startY(top) -> endY(bottom)
+                    // scale 0.5 -> 1.5
+                    let progress = (t.y - (height*0.1)) / (height*0.75);
+                    if(progress < 0) progress = 0;
+                    if(progress > 1) progress = 1;
                     
+                    // サイズ計算
+                    const currentR = 20 + (progress * 30); 
+
+                    // 判定ゾーン計算
+                    const zoneSize = 80 + (progress * 20); // 手前ほど判定も甘く
                     let isHittable = false;
-                    const zoneSize = 80; // 判定幅
                     
                     if (t.y > t.hitY - zoneSize && t.y < t.hitY + zoneSize) {
                         isHittable = true;
                     }
 
+                    // 色ナビ
                     if (isHittable) {
                         t.state = 'yellow';
-                        drawShuttle(t.x, t.y, "yellow");
+                        drawShuttle(t.x, t.y, currentR, "yellow");
                     } else {
                         t.state = 'white';
-                        drawShuttle(t.x, t.y, "white");
+                        // まだ打てないが、近づいてる感を出す（白）
+                        // 通り過ぎたらグレー
+                        if(t.y > t.hitY + zoneSize) drawShuttle(t.x, t.y, currentR, "gray");
+                        else drawShuttle(t.x, t.y, currentR, "white");
                     }
 
                     // 画面外
@@ -458,22 +498,20 @@
             ctx.strokeStyle = "white"; ctx.lineWidth=2; ctx.stroke();
         }
 
-        function drawShuttle(x, y, color) {
+        function drawShuttle(x, y, r, color) {
             ctx.fillStyle = color;
-            ctx.beginPath(); ctx.arc(x, y, 25, 0, Math.PI*2); ctx.fill();
-            // 簡易的な羽根
+            ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI*2); ctx.fill();
             ctx.fillStyle = "rgba(255,255,255,0.5)";
-            ctx.beginPath(); ctx.moveTo(x,y); ctx.lineTo(x-20, y-40); ctx.lineTo(x+20, y-40); ctx.fill();
+            ctx.beginPath(); ctx.moveTo(x,y); 
+            ctx.lineTo(x-r*0.8, y-r*1.5); 
+            ctx.lineTo(x+r*0.8, y-r*1.5); 
+            ctx.fill();
         }
 
-        function spawnEffect(x, y) {
-            effects.push({x:x, y:y, life:10, r:10});
-        }
         function updateEffects() {
             for(let i=effects.length-1; i>=0; i--) {
-                effects[i].life--;
-                effects[i].r+=3;
-                if(effects[i].life<=0) effects.splice(i,1);
+                let e = effects[i]; e.life--; e.r+=5;
+                if(e.life<=0) effects.splice(i,1);
             }
         }
         function drawEffects() {
@@ -488,8 +526,6 @@
         // 入力処理
         function handleStart(e) {
             if(!gameActive) return;
-            // e.preventDefault(); // メニューのスクロール阻害しないよう調整が必要だが、ゲーム中は阻害したい
-            
             const touches = e.changedTouches || [e];
             for(let t of touches) {
                 touchX = t.clientX;
@@ -500,19 +536,16 @@
         }
         function handleMove(e) {
             if(!gameActive) return;
-            e.preventDefault(); // ゲーム中はスクロール禁止
+            e.preventDefault(); 
             const touches = e.changedTouches || [e];
             for(let t of touches) {
                 touchX = t.clientX;
                 touchY = t.clientY;
             }
         }
-        function handleEnd(e) {
-            isTouching = false;
-        }
+        function handleEnd(e) { isTouching = false; }
 
         function checkHit(tx, ty) {
-            // PursuitはMoveで判定するのでここでは除外
             if(gameMode === 'pursuit') return;
 
             for(let i=targets.length-1; i>=0; i--) {
@@ -521,25 +554,33 @@
                 let pts = 0;
                 let msg = "";
 
-                if (t.type === 'ball') { // Saccade
-                    if(Math.hypot(t.x-tx, t.y-ty) < t.r+20) {
-                        hit = true; pts = 10; msg = "+10";
-                    }
+                if (t.type === 'ball') { 
+                    if(Math.hypot(t.x-tx, t.y-ty) < t.r+30) { hit = true; pts = 10; msg = "+10"; }
                 }
-                else if (t.type === 'zoom') { // Depth
-                    if(Math.hypot(t.x-tx, t.y-ty) < t.r+20) {
+                else if (t.type === 'zoom') { 
+                    if(Math.hypot(t.x-tx, t.y-ty) < t.r+30) {
                         if (t.r > t.maxR*0.8) { hit = true; pts = 20; msg = "GOOD!"; }
                         else { showFeedback("WAIT...", "orange"); return; }
                     }
                 }
-                else if (t.type === 'shuttle') { // Real
-                    if(Math.hypot(t.x-tx, t.y-ty) < 60) {
+                else if (t.type === 'shuttle') { 
+                    // 遠近法でサイズ変わるので、判定も今のサイズ基準
+                    // Y位置によるサイズ計算を再計算（簡易）
+                    let progress = (t.y - (height*0.1)) / (height*0.75);
+                    const currentR = 20 + (progress * 30); 
+                    
+                    if(Math.hypot(t.x-tx, t.y-ty) < currentR + 50) { // 判定広め
                         if(t.state === 'yellow') {
                             hit = true; pts = 10; msg = "NICE!";
                         } else {
-                            showFeedback("TIMING...", "orange");
-                            // お手つきペナルティとして消すか、そのままにするか。今回はそのまま
-                            return; 
+                            // ★ V22改良: まだ白くても、かなり大きくなっていれば(判定ゾーンに入りかけ)許容する
+                            // -> ストレス軽減
+                            if (t.y > t.hitY - 120 && t.y < t.hitY + 120) {
+                                hit = true; pts = 5; msg = "OK";
+                            } else {
+                                showFeedback("TIMING...", "orange");
+                                return; 
+                            }
                         }
                     }
                 }
@@ -550,23 +591,20 @@
                     showFeedback(msg, "cyan");
                     spawnEffect(t.x, t.y);
                     targets.splice(i, 1);
-                    // 次のスポーンを早める
-                    spawnTimer = 5;
+                    spawnTimer = (gameMode==='saccade') ? 5 : 20;
+                    break;
                 }
             }
         }
 
         function showFeedback(text, color) {
-            feedbackEl.innerText = text;
-            feedbackEl.style.color = color;
-            feedbackEl.style.opacity = 1;
-            setTimeout(()=>feedbackEl.style.opacity=0, 500);
+            feedbackEl.innerText = text; feedbackEl.style.color = color;
+            feedbackEl.style.opacity = 1; setTimeout(()=>feedbackEl.style.opacity=0, 500);
         }
 
         window.addEventListener('mousedown', handleStart);
         window.addEventListener('mousemove', handleMove);
         window.addEventListener('mouseup', handleEnd);
-        
         window.addEventListener('touchstart', handleStart, {passive: false});
         window.addEventListener('touchmove', handleMove, {passive: false});
         window.addEventListener('touchend', handleEnd);
