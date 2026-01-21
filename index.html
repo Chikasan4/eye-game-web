@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Badminton Vision V41</title>
+    <title>Badminton Vision V42</title>
     <style>
         body {
             margin: 0; overflow: hidden;
@@ -33,7 +33,6 @@
         }
         #diff-val { font-size: 20px; font-weight: bold; color: white; }
 
-        /* ★修正: ガイドを上部に移動し、邪魔にならないように */
         #action-guide {
             position: absolute; top: 15%; left: 50%; transform: translate(-50%, 0);
             font-size: 24px; font-weight: bold; color: rgba(255,255,255,0.7);
@@ -69,6 +68,7 @@
         .btn-off { background-color: #8B4500; border-color: #FFA500; }
         .btn-rally { background-color: #4B0082; border-color: #9370DB; } 
         .btn-report { background-color: #333; border-color: #fff; margin-top: 20px; }
+        .btn-reset { background-color: #555; border-color: #777; font-size: 12px; padding: 8px; margin-top: 20px; width: 150px;}
 
         #feedback-msg {
             position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%);
@@ -108,7 +108,7 @@
 <body>
 
     <div id="menu-screen">
-        <h1>Badminton Vision V41<br><span style="font-size:12px; color:#aaa;">CLEAR VIEW</span></h1>
+        <h1>Badminton Vision V42<br><span style="font-size:12px; color:#aaa;">BUG FIX & SAVE</span></h1>
         
         <div class="btn btn-report" onclick="showReport()">📊 総合レポート</div>
 
@@ -149,9 +149,10 @@
 
     <div id="report-screen">
         <h2 style="color:#00FF7F; margin-bottom:5px;">TOTAL REPORT</h2>
-        <div style="font-size:11px; color:#777; margin-bottom:15px;">※S=トップアスリート基準</div>
+        <div style="font-size:11px; color:#777; margin-bottom:15px;">※データは自動保存されます</div>
         <table id="report-table"></table>
-        <div class="btn" style="background:#fff; color:#333;" onclick="closeReport()">閉じる</div>
+        <div class="btn btn-reset" onclick="resetData()">全データ消去</div>
+        <div class="btn" style="background:#fff; color:#333; margin-top:10px;" onclick="closeReport()">閉じる</div>
     </div>
 
     <script>
@@ -185,8 +186,10 @@
 
         let currentDifficulty = 0.0; 
 
-        const lastScores = { saccade: 0, pursuit: 0, depth: 0, reflex: null, defense: 0, offense: 0, rally: 0 };
-        const bestScores = { saccade: 0, pursuit: 0, depth: 0, reflex: null, defense: 0, offense: 0, rally: 0 };
+        // スコア記録
+        let lastScores = { saccade: 0, pursuit: 0, depth: 0, reflex: null, defense: 0, offense: 0, rally: 0 };
+        // ベストスコアはLocalStorageから読み込み
+        let bestScores = JSON.parse(localStorage.getItem('bv_bestScores')) || { saccade: 0, pursuit: 0, depth: 0, reflex: null, defense: 0, offense: 0, rally: 0 };
 
         let reflexData = [];
         let reflexCount = 0;
@@ -207,6 +210,19 @@
         }
         window.addEventListener('resize', resize);
         resize();
+
+        // ★ データ保存処理
+        function saveBestScores() {
+            localStorage.setItem('bv_bestScores', JSON.stringify(bestScores));
+        }
+        function resetData() {
+            if(confirm("全ての記録を消去しますか？")) {
+                localStorage.removeItem('bv_bestScores');
+                bestScores = { saccade: 0, pursuit: 0, depth: 0, reflex: null, defense: 0, offense: 0, rally: 0 };
+                lastScores = { saccade: 0, pursuit: 0, depth: 0, reflex: null, defense: 0, offense: 0, rally: 0 };
+                showReport();
+            }
+        }
 
         function adjustDifficulty(success) {
             if(gameMode === 'reflex' || gameMode === 'pursuit') return;
@@ -300,7 +316,6 @@
             updateDiffDisplay();
 
             if(mode === 'defense') actionGuideEl.innerText = "TAP!";
-            // ★ V41: ガイド位置修正済
             if(mode === 'offense') actionGuideEl.innerText = "🔴 ↓ SMASH\n🔵 ↔ CUT";
             if(mode === 'rally') actionGuideEl.innerText = "MIX!";
 
@@ -329,10 +344,14 @@
             gameActive = false;
             clearInterval(gameTimerId);
             cancelAnimationFrame(animationFrameId);
+            
             lastScores[gameMode] = score;
+            // ベスト更新チェック & 保存
             if (bestScores[gameMode] === null || score > bestScores[gameMode]) {
                 bestScores[gameMode] = score;
+                saveBestScores();
             }
+            
             document.getElementById('result-title').innerText = "RESULT";
             document.getElementById('result-main').innerText = score;
             const info = getRankInfo(gameMode, score);
@@ -378,7 +397,10 @@
             for(let t of reflexData) { sum += t; if(t < min) min = t; }
             const avg = Math.floor(sum / reflexData.length);
             lastScores.reflex = avg;
-            if (bestScores.reflex === null || avg < bestScores.reflex) bestScores.reflex = avg;
+            if (bestScores.reflex === null || avg < bestScores.reflex) {
+                bestScores.reflex = avg;
+                saveBestScores();
+            }
             document.getElementById('result-title').innerText = "REFLEX RESULT";
             document.getElementById('result-main').innerText = `Avg: ${avg}ms\nBest: ${min}ms`;
             const info = getRankInfo('reflex', avg);
@@ -396,11 +418,13 @@
                 spawnTimer--;
                 if(spawnTimer <= 0) {
                     spawnTarget();
-                    const base = (gameMode==='depth') ? 25 : 40; 
+                    // V40: 実戦は超連射
                     if(gameMode==='defense'||gameMode==='offense'||gameMode==='rally') {
                         spawnTimer = Math.max(5, 20 - currentDifficulty*15); 
+                    } else if (gameMode==='depth') {
+                        spawnTimer = Math.max(10, 25 - currentDifficulty*20);
                     } else {
-                        spawnTimer = Math.max(10, base - (currentDifficulty * 20));
+                        spawnTimer = Math.max(10, 35 - currentDifficulty*25);
                     }
                     if(gameMode==='saccade') spawnTimer = 0;
                 }
@@ -535,8 +559,19 @@
                     }
                 }
                 else if (t.type === 'zoom') {
-                    if(t.growing) { t.r += t.zSpeed; if(t.r >= t.maxR) t.growing = false; } 
-                    else { t.r -= t.zSpeed; if(t.r <= 5) t.growing = true; }
+                    // ★ V42: 深視力修正 (無限ループ解消)
+                    if(t.growing) {
+                        t.r += t.zSpeed; 
+                        if(t.r >= t.maxR) t.growing = false; // 大きくなりきったら縮小へ
+                    } else {
+                        t.r -= t.zSpeed; 
+                        if(t.r <= 0) { // 縮みきったら消滅(MISS)
+                            showFeedback("MISS", "gray");
+                            adjustDifficulty(false);
+                            targets.splice(i, 1); 
+                            continue;
+                        }
+                    }
                     const color = (t.r > t.maxR*0.85) ? "yellow" : "#444";
                     drawCircle(t.x, t.y, t.r, color, 1);
                 }
@@ -655,21 +690,25 @@
 
                 let hit = false; let pts = 0; let msg = "";
 
+                // ① Saccade
                 if (t.type === 'ball') { 
                     if(actionType === 'tap' && Math.hypot(t.x-tx, t.y-ty) < t.r + 20) { hit = true; pts = 10; msg = "HIT"; }
                 }
+                // ③ Depth
                 else if (t.type === 'zoom') { 
                     if(actionType === 'tap' && Math.hypot(t.x-tx, t.y-ty) < t.r + 20) {
                         if (t.r > t.maxR*0.8) { hit = true; pts = 70; msg = "GOOD!"; }
                         else { showFeedback("WAIT", "orange"); return; }
                     }
                 }
+                // ⑤ Defense
                 else if (t.type === 'shuttle') { 
                     if(actionType === 'tap' && Math.hypot(t.x-tx, t.y-ty) < 70) {
                         if(t.state === 'yellow') { hit = true; pts = 50; msg = "NICE"; }
                         else { showFeedback("TIMING...", "orange"); return; }
                     }
                 }
+                // ⑥ Offense (Choice)
                 else if (t.type === 'lob_smash') {
                     if(Math.hypot(t.x-tx, t.y-ty) < 100 && t.state === 'hang') {
                         if(actionType === 'swipe_down') { hit = true; pts = 50; msg = "SMASH!!"; } 
@@ -682,11 +721,10 @@
                         else if(actionType === 'swipe_down') { showFeedback("WRONG!", "red"); adjustDifficulty(false); targets.splice(i,1); return; }
                     }
                 }
+                // ⑦ Feint
                 else if (t.type === 'feint') {
                     if(Math.hypot(t.x-tx, t.y-ty) < 70) {
-                        if(t.state === 'yellow') { 
-                            hit = true; pts = 100; msg = "READ!"; 
-                        } 
+                        if(t.state === 'yellow') { hit = true; pts = 100; msg = "READ!"; } 
                     }
                 }
 
