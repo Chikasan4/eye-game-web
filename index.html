@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Badminton Vision V25</title>
+    <title>Badminton Vision V26</title>
     <style>
         body {
             margin: 0; overflow: hidden;
-            background-color: #1a1a1a;
+            background-color: #8B4513; /* 茶色の床 */
             font-family: sans-serif; color: white; touch-action: none;
             user-select: none; -webkit-user-select: none;
         }
@@ -21,24 +21,26 @@
         }
         .hud { font-size: 18px; font-weight: bold; text-shadow: 1px 1px 2px black; font-family: monospace; }
         
-        /* 現在のランク表示 */
-        #rank-indicator {
-            position: absolute; top: 50px; right: 20px;
-            font-size: 40px; font-weight: 900; color: #aaa;
-            opacity: 0.3; pointer-events: none; transition: color 0.2s;
+        /* ランクゲージ */
+        #rank-container {
+            position: absolute; top: 50px; right: 20px; width: 150px; text-align: right;
+            pointer-events: none;
         }
+        #rank-label { font-size: 24px; font-weight: 900; color: white; text-shadow: 1px 1px 2px black; }
+        #rank-bar-bg { width: 100%; height: 6px; background: rgba(0,0,0,0.5); margin-top: 5px; border-radius: 3px; }
+        #rank-bar-fill { width: 30%; height: 100%; background: #00FF7F; border-radius: 3px; transition: width 0.3s, background-color 0.3s; }
 
         #menu-screen {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background-color: #111; display: flex; flex-direction: column;
+            background-color: rgba(0,0,0,0.9); display: flex; flex-direction: column;
             align-items: center; justify-content: flex-start; z-index: 100;
             overflow-y: auto; padding-top: 20px; padding-bottom: 40px;
         }
-        h1 { margin: 10px 0 10px 0; font-size: 22px; text-align: center; color: #00BFFF; border-bottom: 2px solid #00BFFF; padding-bottom: 5px; }
+        h1 { margin: 10px 0 10px 0; font-size: 22px; text-align: center; color: #00FF7F; border-bottom: 2px solid #00FF7F; padding-bottom: 5px; }
         
         .section-title {
-            color: #888; font-size: 13px; margin-top: 15px; margin-bottom: 5px; 
-            width: 90%; max-width: 350px; text-align: left; border-left: 3px solid #00BFFF; padding-left: 8px;
+            color: #ddd; font-size: 13px; margin-top: 15px; margin-bottom: 5px; 
+            width: 90%; max-width: 350px; text-align: left; border-left: 3px solid #00FF7F; padding-left: 8px;
         }
         
         .btn {
@@ -68,15 +70,15 @@
             background-color: rgba(0,0,0,0.95); flex-direction: column;
             align-items: center; justify-content: center; z-index: 150;
         }
-        #result-title { font-size: 20px; margin-bottom: 10px; color: #888; }
-        #result-main { font-size: 42px; font-weight: 900; color: #00BFFF; margin-bottom: 15px; text-align: center; white-space: pre-line;}
+        #result-title { font-size: 20px; margin-bottom: 10px; color: #aaa; }
+        #result-main { font-size: 42px; font-weight: 900; color: #00FF7F; margin-bottom: 15px; text-align: center; white-space: pre-line;}
         #result-sub { font-size: 16px; color: #ccc; margin-bottom: 30px; text-align: center; line-height: 1.6; padding: 0 20px;}
         
         #close-result-btn { background:#fff; color:#000; border:none; font-weight:900; }
 
         table { border-collapse: collapse; width: 95%; max-width: 400px; color: white; margin-bottom: 20px; font-size: 14px; }
         th, td { border: 1px solid #444; padding: 8px; text-align: center; }
-        th { background-color: #222; color: #00BFFF; }
+        th { background-color: #222; color: #00FF7F; }
         .rank-s { color: #FFD700; font-weight: 900; }
         .rank-a { color: #00FF7F; }
         .rank-b { color: #00BFFF; }
@@ -96,29 +98,32 @@
 <body>
 
     <div id="menu-screen">
-        <h1>Badminton Vision V25<br><span style="font-size:12px; color:#aaa;">AUTO LEVELING</span></h1>
+        <h1>Badminton Vision V26<br><span style="font-size:12px; color:#aaa;">FAIR PLAY EDITION</span></h1>
         
         <div class="btn btn-report" onclick="showReport()">📊 総合レポート</div>
 
         <div class="section-title">【A】基礎・眼球トレ</div>
         <div class="btn btn-vision" onclick="startGame('saccade')">① 跳躍性 (Auto Level)</div>
-        <div class="btn btn-vision" onclick="startGame('pursuit')">② 追従性 (徐々に加速)</div>
-        <div class="btn btn-vision" onclick="startGame('depth')">③ 深視力 (速度変化)</div>
+        <div class="btn btn-vision" onclick="startGame('pursuit')">② 追従性 (Trace)</div>
+        <div class="btn btn-vision" onclick="startGame('depth')">③ 深視力 (Zoom)</div>
 
         <div class="section-title">【B】測定</div>
         <div class="btn btn-measure" onclick="startGame('reflex')">④ 反射神経 (3回平均)</div>
 
-        <div class="section-title">【C】実戦 (ランク変動制)</div>
-        <div class="btn btn-def" onclick="startGame('defense')">⑤ 守り (Start: Lv.C)</div>
-        <div class="btn btn-off" onclick="startGame('offense')">⑥ 攻め (Start: Lv.C)</div>
-        <div class="btn btn-rally" onclick="startGame('rally')">⑦ 総合 (Start: Lv.C)</div>
+        <div class="section-title">【C】実戦 (バグ修正済)</div>
+        <div class="btn btn-def" onclick="startGame('defense')">⑤ 守り (レシーブ)</div>
+        <div class="btn btn-off" onclick="startGame('offense')">⑥ 攻め (スマッシュ)</div>
+        <div class="btn btn-rally" onclick="startGame('rally')">⑦ 総合 (ラリー)</div>
     </div>
 
     <div id="game-container">
         <canvas id="gameCanvas"></canvas>
         <div id="feedback-msg"></div>
         <div id="reflex-signal">WAIT</div>
-        <div id="rank-indicator">C</div>
+        <div id="rank-container">
+            <div id="rank-label">Rank C</div>
+            <div id="rank-bar-bg"><div id="rank-bar-fill"></div></div>
+        </div>
         <div id="ui-layer">
             <div class="hud" id="hud-left">Score: 0</div>
             <div class="hud" id="hud-right">Time: 30</div>
@@ -134,8 +139,8 @@
     </div>
 
     <div id="report-screen">
-        <h2 style="color:#00BFFF; margin-bottom:5px;">TOTAL REPORT</h2>
-        <div style="font-size:11px; color:#777; margin-bottom:15px;">※到達ランク目安</div>
+        <h2 style="color:#00FF7F; margin-bottom:5px;">TOTAL REPORT</h2>
+        <div style="font-size:11px; color:#777; margin-bottom:15px;">※V26基準 (適正評価)</div>
         <table id="report-table"></table>
         <div class="btn" style="background:#fff; color:#333;" onclick="closeReport()">閉じる</div>
     </div>
@@ -152,7 +157,9 @@
         const feedbackEl = document.getElementById('feedback-msg');
         const reflexSignal = document.getElementById('reflex-signal');
         const closeResultBtn = document.getElementById('close-result-btn');
-        const rankIndicator = document.getElementById('rank-indicator');
+        const rankLabel = document.getElementById('rank-label');
+        const rankBarFill = document.getElementById('rank-bar-fill');
+        const rankContainer = document.getElementById('rank-container');
 
         let width, height;
         let gameMode = ''; 
@@ -166,15 +173,12 @@
         let gameTimerId;
         let resultLockTimer;
 
-        // ★ V25: 動的難易度 (0.0 ~ 1.0)
-        // 0.0=D(Easy), 0.3=C(Normal), 0.6=B(Hard), 0.8=A(Pro), 1.0=S(God)
+        // V26: 難易度調整 (0.0 ~ 1.0)
         let currentDifficulty = 0.3; 
-        let combo = 0; // 連続成功数
 
         // スコア記録
         const lastScores = { saccade: 0, pursuit: 0, depth: 0, reflex: null, defense: 0, offense: 0, rally: 0 };
         const bestScores = { saccade: 0, pursuit: 0, depth: 0, reflex: null, defense: 0, offense: 0, rally: 0 };
-        const maxReachedRank = { saccade: '-', pursuit: '-', depth: '-', defense: '-', offense: '-', rally: '-' };
 
         // 反射測定用
         let reflexData = [];
@@ -196,19 +200,17 @@
         window.addEventListener('resize', resize);
         resize();
 
-        // 難易度調整ロジック
+        // ★ V26: 緩和された難易度調整
         function adjustDifficulty(success) {
-            if(gameMode === 'reflex' || gameMode === 'pursuit') return; // この2つは別ロジック
+            if(gameMode === 'reflex' || gameMode === 'pursuit') return;
 
             if (success) {
-                combo++;
-                // コンボが続くほど難易度UP
+                // 成功時は +5% (20回でMAX)
                 currentDifficulty += 0.05; 
                 if (currentDifficulty > 1.0) currentDifficulty = 1.0;
             } else {
-                combo = 0;
-                // ミスしたらガクッと下げる（練習効果維持）
-                currentDifficulty -= 0.15;
+                // ミス時は -5% (V25の-15%から大幅緩和)
+                currentDifficulty -= 0.05;
                 if (currentDifficulty < 0.0) currentDifficulty = 0.0;
             }
             updateRankDisplay();
@@ -217,32 +219,30 @@
         function updateRankDisplay() {
             let rank = "D";
             let color = "#aaa";
+            let pct = Math.floor(currentDifficulty * 100);
             
             if (currentDifficulty >= 0.9) { rank = "S"; color = "#FFD700"; }
             else if (currentDifficulty >= 0.7) { rank = "A"; color = "#00FF7F"; }
-            else if (currentDifficulty >= 0.5) { rank = "B"; color = "#00BFFF"; }
+            else if (currentDifficulty >= 0.4) { rank = "B"; color = "#00BFFF"; }
             else if (currentDifficulty >= 0.2) { rank = "C"; color = "white"; }
             
-            rankIndicator.innerText = rank;
-            rankIndicator.style.color = color;
-            
-            // 最高到達ランク保存
-            // 簡易的に現在のランクを保存（より厳密にはゲーム終了時に最高値を出すべきだが今回は簡易版）
-            // maxReachedRank[gameMode] = rank; 
+            rankLabel.innerText = `${rank} ${pct}%`;
+            rankLabel.style.color = color;
+            rankBarFill.style.width = `${pct}%`;
+            rankBarFill.style.backgroundColor = color;
         }
 
-        // ランク取得（レポート用）
         function getRank(mode, val) {
             if (val === null || val === 0) return "-";
             if (mode === 'reflex') {
                 if(val < 200) return "S"; if(val < 240) return "A"; if(val < 280) return "B"; if(val < 350) return "C"; return "D";
             }
-            // スコア基準 (V25: 動的なのでスコア自体は積み上げ式)
+            // V26: 基準値調整
             let s=0, a=0, b=0, c=0;
             if(mode==='saccade') { s=50; a=40; b=30; c=15; }
             else if(mode==='pursuit') { s=800; a=600; b=400; c=200; }
             else if(mode==='depth') { s=120; a=90; b=60; c=30; }
-            else if(mode==='defense') { s=40; a=30; b=20; c=10; } // 回数ベースに戻す
+            else if(mode==='defense') { s=40; a=30; b=20; c=10; }
             else if(mode==='offense') { s=40; a=30; b=20; c=10; }
             else if(mode==='rally') { s=50; a=35; b=20; c=10; } 
             
@@ -290,15 +290,13 @@
             gameActive = true;
             spawnTimer = 0;
             
-            // ★ V25: 初期難易度はCスタート
             currentDifficulty = 0.3; 
-            combo = 0;
             updateRankDisplay();
 
             if (mode === 'reflex') {
                 hudLeft.innerText = "Reflex";
                 hudRight.innerText = "1/3";
-                rankIndicator.innerText = ""; // 反射測定にランク表示は不要
+                rankContainer.style.display = 'none';
                 reflexData = [];
                 reflexCount = 0;
                 initReflexRound();
@@ -306,6 +304,8 @@
                 timeLeft = (mode === 'rally') ? 60 : 30;
                 hudLeft.innerText = "Score: 0";
                 hudRight.innerText = `Time: ${timeLeft}`;
+                rankContainer.style.display = 'block';
+                if(mode==='pursuit') rankContainer.style.display = 'none'; // Pursuitは独自加速なので非表示
                 startGameTimer();
                 update();
             }
@@ -332,9 +332,8 @@
 
             document.getElementById('result-title').innerText = "RESULT";
             document.getElementById('result-main').innerText = score;
-            
             const rank = getRank(gameMode, score);
-            document.getElementById('result-sub').innerText = `到達ランク: ${rank}\n(難易度自動調整)`;
+            document.getElementById('result-sub').innerText = `評価: ${rank}`;
             
             closeResultBtn.disabled = true; closeResultBtn.style.opacity = 0.5;
             resultScreen.style.display = 'flex';
@@ -397,7 +396,7 @@
             lastScores.reflex = avg;
             if (bestScores.reflex === null || avg < bestScores.reflex) bestScores.reflex = avg;
             document.getElementById('result-title').innerText = "REFLEX RESULT";
-            document.getElementById('result-main').innerText = `Avg: ${avg}ms`;
+            document.getElementById('result-main').innerText = `Avg: ${avg}ms\nBest: ${min}ms`;
             const rank = getRank('reflex', avg);
             document.getElementById('result-sub').innerText = `ランク: ${rank}`;
             closeResultBtn.disabled = true; closeResultBtn.style.opacity = 0.5;
@@ -408,17 +407,18 @@
         // --- ゲームループ ---
         function update() {
             if (!gameActive) return;
-            ctx.fillStyle = "#111"; ctx.fillRect(0,0,width,height);
+            // 茶色の床でクリア
+            ctx.fillStyle = "#8B4513"; ctx.fillRect(0,0,width,height);
             if(['defense', 'offense', 'rally'].includes(gameMode)) drawCourt();
 
             if (targets.length === 0) {
                 spawnTimer--;
                 if(spawnTimer <= 0) {
                     spawnTarget();
-                    // 難易度が高いほど次が速く出る
-                    const baseInterval = (gameMode==='defense'||gameMode==='offense') ? 30 : 40;
-                    spawnTimer = Math.max(10, baseInterval - (currentDifficulty * 20));
-                    if (gameMode==='saccade') spawnTimer = 0;
+                    // V26: 難易度係数を緩やかに
+                    if(gameMode === 'saccade') spawnTimer = 0; 
+                    else if(gameMode === 'defense' || gameMode === 'offense') spawnTimer = 15;
+                    else spawnTimer = 20;
                 }
             }
             updateTargets(); updateEffects(); drawEffects();
@@ -426,37 +426,36 @@
         }
 
         function drawCourt() {
+            // 緑のコート
             const cx = (width - width*0.9)/2; const cy = height*0.2;
             const cw = width*0.9; const ch = height*0.6;
-            ctx.strokeStyle = "#444"; ctx.lineWidth=4;
+            ctx.fillStyle = "#2E8B57"; ctx.fillRect(cx, cy, cw, ch);
+            ctx.strokeStyle = "white"; ctx.lineWidth=3;
             ctx.strokeRect(cx, cy, cw, ch);
+            // ネット
             ctx.beginPath(); ctx.moveTo(cx, cy+ch/2); ctx.lineTo(cx+cw, cy+ch/2); ctx.stroke();
-            ctx.strokeStyle = "#666"; ctx.lineWidth=2; ctx.strokeRect(cx, cy, cw, ch);
+            // サービスライン等（簡易）
+            ctx.lineWidth=1;
+            ctx.beginPath(); ctx.moveTo(cx, cy+ch*0.1); ctx.lineTo(cx+cw, cy+ch*0.1); ctx.stroke(); // ショート
+            ctx.beginPath(); ctx.moveTo(cx, cy+ch*0.9); ctx.lineTo(cx+cw, cy+ch*0.9); ctx.stroke(); // ロング
+            ctx.beginPath(); ctx.moveTo(cx+cw/2, cy); ctx.lineTo(cx+cw/2, cy+ch); ctx.stroke(); // センター
         }
 
         function spawnTarget() {
-            // ① Saccade
             if (gameMode === 'saccade') {
                 const r = 35;
-                // 難易度が高いほど寿命が短い
-                let life = 60 - (currentDifficulty * 30); // 60(1s) -> 30(0.5s)
+                let life = 60 - (currentDifficulty * 30);
                 targets.push({ x: Math.random()*(width-2*r)+r, y: Math.random()*(height-2*r)+r, r: r, color: '#00FF7F', type: 'ball', life: life, maxLife: life });
             }
-            // ② Pursuit: 徐々に加速
             else if (gameMode === 'pursuit') {
-                // 初期速度はゆっくり。時間経過(なぞってる間)でtargets内のspeedを加算する
-                let spd = 0.03 + (currentDifficulty * 0.02); 
+                let spd = 0.03 + (currentDifficulty * 0.03); 
                 targets.push({ x: width/2, y: height/2, r: 35, color: 'cyan', type: 'moving', angle: 0, speed: spd, baseSpeed: spd });
             }
-            // ③ Depth: タイミングばらつき
             else if (gameMode === 'depth') {
-                // 難易度が高いほど速い + ランダム要素
                 let baseZ = 2 + (currentDifficulty * 3);
-                let rnd = Math.random() * 2; // バラつき
-                let zSpd = baseZ + rnd;
+                let zSpd = baseZ + Math.random();
                 targets.push({ x: width/2, y: height/2, r: 5, color: 'yellow', type: 'zoom', growing: true, maxR: 110, zSpeed: zSpd });
             }
-            // 実戦系
             else {
                 let type = 'rally';
                 if(gameMode === 'defense') type = 'def';
@@ -467,10 +466,10 @@
                 const startY = height * 0.1;
                 const endY = height * 0.85; 
 
-                // ★ V25: 難易度によるスピード変化
+                // スピード計算（少し遅くスタート）
                 let speed = 0;
-                if (type === 'def') speed = 8 + (currentDifficulty * 12); // 8 ~ 20
-                else speed = 4 + (currentDifficulty * 8); // 4 ~ 12
+                if (type === 'def') speed = 10 + (currentDifficulty * 10); // 10-20
+                else speed = 5 + (currentDifficulty * 8); // 5-13
 
                 const hitY = (type === 'def') ? height * 0.75 : height * 0.4;
                 
@@ -478,7 +477,7 @@
                     x: startX, y: startY, r: 10,
                     type: 'shuttle', mode: type,
                     speed: speed, hitY: hitY, state: 'white',
-                    endY: endY
+                    endY: endY, isDead: false // ★生存管理用フラグ
                 });
             }
         }
@@ -486,12 +485,13 @@
         function updateTargets() {
             for (let i = targets.length - 1; i >= 0; i--) {
                 const t = targets[i];
+                if(t.isDead) { targets.splice(i,1); continue; } // 死んでたら即消去
 
                 if (t.type === 'ball') {
                     t.life--;
                     if(t.life<=0) {
                         targets.splice(i,1);
-                        adjustDifficulty(false); // 見逃しはランクダウン
+                        adjustDifficulty(false); 
                     } else {
                         let alpha = t.life / t.maxLife;
                         drawCircle(t.x, t.y, t.r, t.color, alpha);
@@ -501,20 +501,14 @@
                     t.angle += t.speed;
                     t.x = width/2 + Math.cos(t.angle * 1.5)* (width*0.4);
                     t.y = height/2 + Math.sin(t.angle * 2.3) * (height*0.25);
-                    
                     let isTracking = false;
                     if(isTouching && Math.hypot(t.x - touchX, t.y - touchY) < t.r + 20) isTracking = true;
-
                     if(isTracking) {
-                        // なぞっている間、徐々に加速
-                        t.speed += 0.0005; 
-                        // 難易度も少しずつ上げる
+                        t.speed += 0.0003; 
                         if(frameCount % 60 === 0) adjustDifficulty(true);
-                        
                         score++; hudLeft.innerText = `Score: ${score}`;
                         drawCircle(t.x, t.y, t.r, "magenta", 1);
                     } else {
-                        // 離すと減速
                         if(t.speed > t.baseSpeed) t.speed -= 0.001;
                         drawCircle(t.x, t.y, t.r, "cyan", 1);
                     }
@@ -531,9 +525,8 @@
                     if(progress < 0) progress = 0; if(progress > 1) progress = 1;
                     const currentR = 15 + (progress * 35);
                     
-                    // 難易度が高いほど判定が厳しい
                     const baseZone = 120;
-                    const zoneSize = Math.max(40, baseZone - (currentDifficulty * 80)); // 120 -> 40
+                    const zoneSize = Math.max(50, baseZone - (currentDifficulty * 50)); 
                     
                     let isHittable = false;
                     if (t.y > t.hitY - zoneSize && t.y < t.hitY + zoneSize) isHittable = true;
@@ -543,14 +536,17 @@
                         drawShuttle(t.x, t.y, currentR, "#FFD700");
                     } else {
                         t.state = 'white';
-                        if(t.y > t.hitY + zoneSize) drawShuttle(t.x, t.y, currentR, "#555");
+                        if(t.y > t.hitY + zoneSize) drawShuttle(t.x, t.y, currentR, "gray");
                         else drawShuttle(t.x, t.y, currentR, "white");
                     }
 
                     if (t.y > height + 50) {
-                        showFeedback("MISS", "gray");
-                        adjustDifficulty(false); // ミス
-                        targets.splice(i, 1);
+                        // ★修正: MISS判定時もisDeadチェック
+                        if (!t.isDead) {
+                            showFeedback("MISS", "gray");
+                            adjustDifficulty(false);
+                            targets.splice(i, 1);
+                        }
                     }
                 }
             }
@@ -568,7 +564,7 @@
             ctx.save();
             for(let e of effects) {
                 ctx.beginPath(); ctx.arc(e.x, e.y, e.r, 0, Math.PI*2);
-                ctx.strokeStyle = `rgba(0,191,255,${e.life/10})`; ctx.lineWidth=5; ctx.stroke();
+                ctx.strokeStyle = `rgba(255,255,255,${e.life/10})`; ctx.lineWidth=5; ctx.stroke();
             }
             ctx.restore();
         }
@@ -584,7 +580,7 @@
         function drawShuttle(x, y, r, color) {
             ctx.fillStyle = color;
             ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI*2); ctx.fill();
-            ctx.fillStyle = "rgba(255,255,255,0.3)";
+            ctx.fillStyle = "rgba(255,255,255,0.5)";
             ctx.beginPath(); ctx.moveTo(x,y); 
             ctx.lineTo(x-r*0.7, y-r*1.4); 
             ctx.lineTo(x+r*0.7, y-r*1.4); 
@@ -608,50 +604,48 @@
 
             for(let i=targets.length-1; i>=0; i--) {
                 const t = targets[i];
+                if(t.isDead) continue; // 既に死んでいるなら無視
+
                 let hit = false; let pts = 0; let msg = "";
 
                 if (t.type === 'ball') { 
-                    if(Math.hypot(t.x-tx, t.y-ty) < t.r + 10) { 
-                        hit = true; pts = 1; msg = "HIT"; 
-                        adjustDifficulty(true);
-                    }
+                    if(Math.hypot(t.x-tx, t.y-ty) < t.r + 20) { hit = true; pts = 10; msg = "+10"; }
                 }
                 else if (t.type === 'zoom') { 
-                    if(Math.hypot(t.x-tx, t.y-ty) < t.r + 10) {
-                        if (t.r > t.maxR*0.85) { 
-                            hit = true; pts = 5; msg = "JUST!"; 
-                            adjustDifficulty(true);
-                        }
+                    if(Math.hypot(t.x-tx, t.y-ty) < t.r + 20) {
+                        if (t.r > t.maxR*0.8) { hit = true; pts = 20; msg = "GOOD!"; }
                         else { showFeedback("WAIT", "orange"); return; }
                     }
                 }
                 else if (t.type === 'shuttle') { 
                     let progress = (t.y - (height*0.1)) / (height*0.75);
                     const currentR = 15 + (progress * 35);
-                    const baseZone = 120;
-                    const zoneSize = Math.max(40, baseZone - (currentDifficulty * 80));
-
+                    
                     if(Math.hypot(t.x-tx, t.y-ty) < currentR + 30) {
                         if(t.state === 'yellow') {
-                            hit = true; pts = 1; msg = "NICE";
-                            adjustDifficulty(true);
+                            hit = true; pts = 10; msg = "NICE";
                         } else {
-                            if (t.y > t.hitY - zoneSize && t.y < t.hitY + zoneSize) {
-                                hit = true; pts = 1; msg = "OK";
-                                adjustDifficulty(true);
+                            if (t.y > t.hitY - 100 && t.y < t.hitY + 100) { // 範囲拡大
+                                hit = true; pts = 5; msg = "GOOD";
                             } else {
-                                showFeedback("TIMING", "orange"); return; 
+                                showFeedback("TIMING...", "orange"); return; 
                             }
                         }
                     }
                 }
 
                 if(hit) {
+                    t.isDead = true; // ★死亡フラグON
                     score += pts;
+                    if(score < 0) score = 0; // マイナススコア防止
                     hudLeft.innerText = `Score: ${score}`;
+                    
                     showFeedback(msg, "cyan");
                     spawnEffect(t.x, t.y);
-                    targets.splice(i, 1);
+                    
+                    adjustDifficulty(true); // 難易度UP
+                    
+                    targets.splice(i, 1); // 配列から削除
                     if(gameMode!=='saccade') spawnTimer = 5; 
                     break;
                 }
