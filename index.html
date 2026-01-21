@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Badminton Vision V39</title>
+    <title>Badminton Vision V40</title>
     <style>
         body {
             margin: 0; overflow: hidden;
@@ -35,8 +35,8 @@
 
         #action-guide {
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            font-size: 50px; font-weight: 900; color: rgba(255,255,255,0.15);
-            pointer-events: none; white-space: nowrap; z-index: 5; text-align: center;
+            font-size: 40px; font-weight: 900; color: rgba(255,255,255,0.15);
+            pointer-events: none; white-space: pre-line; z-index: 5; text-align: center; line-height: 1.5;
         }
 
         #menu-screen {
@@ -106,7 +106,7 @@
 <body>
 
     <div id="menu-screen">
-        <h1>Badminton Vision V39<br><span style="font-size:12px; color:#aaa;">INSTANT SMASH</span></h1>
+        <h1>Badminton Vision V40<br><span style="font-size:12px; color:#aaa;">CHOICE & SKILL</span></h1>
         
         <div class="btn btn-report" onclick="showReport()">📊 総合レポート</div>
 
@@ -118,10 +118,10 @@
         <div class="section-title">【B】測定</div>
         <div class="btn btn-measure" onclick="startGame('reflex')">④ 反射神経 (AGE TEST)</div>
 
-        <div class="section-title">【C】実戦 (修正版)</div>
+        <div class="section-title">【C】実戦 (判断打ち分け)</div>
         <div class="btn btn-def" onclick="startGame('defense')">⑤ 守り (TAP: 迎撃)</div>
-        <div class="btn btn-off" onclick="startGame('offense')">⑥ 攻め (SWIPE: 即打ち!)</div>
-        <div class="btn btn-rally" onclick="startGame('rally')">⑦ 戦術眼 (Mix Action)</div>
+        <div class="btn btn-off" onclick="startGame('offense')">⑥ 攻め (赤↓ / 青↔)</div>
+        <div class="btn btn-rally" onclick="startGame('rally')">⑦ 総合 (Mix)</div>
     </div>
 
     <div id="game-container">
@@ -193,7 +193,6 @@
         let reflexState = 'idle';
         let reflexTimeout;
 
-        // タッチ制御用
         let isTouching = false;
         let startX = 0, startY = 0;
         let currentX = 0, currentY = 0;
@@ -299,7 +298,8 @@
             updateDiffDisplay();
 
             if(mode === 'defense') actionGuideEl.innerText = "TAP!";
-            if(mode === 'offense') actionGuideEl.innerText = "SWIPE ↓";
+            // ★ V40: ガイド更新
+            if(mode === 'offense') actionGuideEl.innerText = "🔴 ↓ SMASH\n🔵 ↔ CUT";
             if(mode === 'rally') actionGuideEl.innerText = "MIX!";
 
             if (mode === 'reflex') {
@@ -394,7 +394,7 @@
                 spawnTimer--;
                 if(spawnTimer <= 0) {
                     spawnTarget();
-                    // V39: 実戦は超連射
+                    // V40: 実戦は超連射
                     if(gameMode==='defense'||gameMode==='offense'||gameMode==='rally') {
                         spawnTimer = Math.max(5, 20 - currentDifficulty*15); 
                     } else if (gameMode==='depth') {
@@ -443,11 +443,14 @@
             else {
                 let type = 'rally';
                 if(gameMode === 'defense') type = 'def';
-                else if(gameMode === 'offense') type = 'off';
+                else if(gameMode === 'offense') {
+                    // ★ V40: Offense = Smash(Red) or Cut(Blue)
+                    type = (Math.random() < 0.6) ? 'off_smash' : 'off_cut';
+                }
                 else {
                     let r = Math.random();
                     if(r < 0.4) type = 'def';
-                    else if(r < 0.7) type = 'off';
+                    else if(r < 0.7) type = 'off_smash';
                     else type = 'feint';
                 }
                 
@@ -456,7 +459,6 @@
                 const endY = height * 0.85; 
 
                 if (type === 'def') {
-                    // スマッシュ
                     let speed = 15 + (d * 20); 
                     let tx = (Math.random() * width*0.8) + width*0.1; 
                     let vx = (tx - startX) / ( (endY-startY)/speed ); 
@@ -467,22 +469,31 @@
                         hitY: height * 0.75, state: 'white',
                         endY: endY, isHit: false
                     });
-                } else if (type === 'off') {
-                    // ★ V39: 修正版・即打ちチャンス
-                    // 下から上がらず、上空(hitYより少し上)にいきなり出現
-                    let targetY = height * 0.3; // 高い位置
+                } 
+                else if (type === 'off_smash') {
+                    // 赤：スマッシュ（↓）
+                    let targetY = height * 0.3; 
                     targets.push({
-                        x: startX, y: targetY, 
-                        r: 10,
-                        type: 'lob', mode: type,
-                        speed: 0, 
-                        state: 'hang', // いきなり滞空状態
-                        hitY: targetY, 
-                        hangTime: 40, // 猶予
+                        x: startX, y: targetY, r: 10,
+                        type: 'lob_smash', mode: type,
+                        speed: 0, state: 'hang', 
+                        hitY: targetY, hangTime: 40, 
                         endY: endY, isHit: false
                     });
-                } else if (type === 'feint') {
-                    // フェイント
+                }
+                else if (type === 'off_cut') {
+                    // 青：カット（↔）
+                    // 少し低い位置に出る
+                    let targetY = height * 0.4; 
+                    targets.push({
+                        x: startX, y: targetY, r: 10,
+                        type: 'lob_cut', mode: type,
+                        speed: 0, state: 'hang',
+                        hitY: targetY, hangTime: 35, // 少し早い
+                        endY: endY, isHit: false
+                    });
+                }
+                else if (type === 'feint') {
                     let initialSpeed = 15 + (d * 20); 
                     let tx = (Math.random() * width*0.8) + width*0.1;
                     let vx = (tx - startX) / ( (endY-startY)/initialSpeed );
@@ -534,41 +545,36 @@
                     drawCircle(t.x, t.y, t.r, color, 1);
                 }
                 else if (t.type === 'shuttle') {
-                    t.y += t.speed;
-                    t.x += t.vx;
+                    t.y += t.speed; t.x += t.vx;
                     let progress = (t.y - (height*0.1)) / (height*0.75);
                     const currentR = 15 + (progress * 35);
-                    
-                    const baseZone = 120;
-                    const zoneSize = Math.max(50, baseZone - (currentDifficulty * 50)); 
-                    
+                    const zoneSize = Math.max(50, 120 - (currentDifficulty * 50)); 
                     if (t.y > t.hitY - zoneSize && t.y < t.hitY + zoneSize) {
-                        t.state = 'yellow';
-                        drawShuttle(t.x, t.y, currentR, "#FFD700");
+                        t.state = 'yellow'; drawShuttle(t.x, t.y, currentR, "#FFD700");
                     } else {
-                        t.state = 'white';
-                        if(t.y > t.hitY + zoneSize) drawShuttle(t.x, t.y, currentR, "gray");
-                        else drawShuttle(t.x, t.y, currentR, "white");
+                        t.state = 'white'; drawShuttle(t.x, t.y, currentR, "white");
                     }
                     if (t.y > height + 50) { if (!t.isHit) { showFeedback("MISS", "gray"); adjustDifficulty(false); targets.splice(i, 1); } }
                 }
-                else if (t.type === 'lob') {
-                    // ★ V39: いきなり滞空
+                else if (t.type === 'lob_smash' || t.type === 'lob_cut') {
+                    // Offense: 2種類
                     if (t.state === 'hang') {
                         t.hangTime--;
                         if (t.hangTime <= 0) t.state = 'falling';
                     } else if (t.state === 'falling') {
-                        t.y += 15; // 落下速度
+                        t.y += 15; 
                     }
                     
-                    // 赤色チャンス
                     let currentR = 50; 
-                    let color = (t.state === 'hang') ? "#FF4500" : "gray";
+                    // 赤(Smash) or 青(Cut)
+                    let color = (t.type === 'lob_smash') ? "#FF4500" : "#00BFFF";
+                    if (t.state === 'falling') color = "gray";
                     drawShuttle(t.x, t.y, currentR, color);
                     
                     if(t.state === 'hang') {
-                        ctx.fillStyle = "rgba(255,255,255,0.5)"; font = "20px Arial";
-                        ctx.fillText("SWIPE!", t.x-30, t.y-60);
+                        ctx.fillStyle = "rgba(255,255,255,0.7)"; font = "20px Arial";
+                        let txt = (t.type==='lob_smash') ? "↓" : "↔";
+                        ctx.fillText(txt, t.x-10, t.y-60);
                     }
 
                     if (t.y > height + 50) { if (!t.isHit) { showFeedback("MISS", "gray"); adjustDifficulty(false); targets.splice(i, 1); } }
@@ -622,7 +628,7 @@
                 startX = t.clientX; startY = t.clientY;
                 currentX = startX; currentY = startY;
                 isTouching = true; 
-                // Defenseはタップ判定
+                // Defenseはタップ
                 if(gameMode !== 'offense') checkHit(startX, startY, 'tap');
             }
         }
@@ -637,9 +643,14 @@
             if(!gameActive) return;
             const touches = e.changedTouches || [e];
             for(let t of touches) {
+                let dx = t.clientX - startX;
                 let dy = t.clientY - startY;
-                if(dy > 30) { // 下方向に30px以上
-                    checkHit(startX, startY, 'swipe');
+                
+                // スワイプ判定 (感度30px)
+                if (dy > 30 && Math.abs(dx) < 30) {
+                    checkHit(startX, startY, 'swipe_down');
+                } else if (Math.abs(dx) > 30 && Math.abs(dy) < 30) {
+                    checkHit(startX, startY, 'swipe_side');
                 }
             }
             isTouching = false; 
@@ -672,26 +683,25 @@
                         else { showFeedback("TIMING...", "orange"); return; }
                     }
                 }
-                // ⑥ Offense (Swipe Only)
-                else if (t.type === 'lob') {
-                    // ロブの判定：範囲広め
-                    if(Math.hypot(t.x-tx, t.y-ty) < 100) {
-                        if(t.state === 'hang') {
-                            if(actionType === 'swipe') { hit = true; pts = 50; msg = "SMASH!!"; } 
-                            else { return; } 
-                        } else { 
-                            // 落ちてたら遅い
-                            if(t.state === 'falling') showFeedback("LATE...", "orange");
-                            return; 
-                        }
+                // ⑥ Offense (Choice)
+                else if (t.type === 'lob_smash') {
+                    // 赤：下スワイプのみ
+                    if(Math.hypot(t.x-tx, t.y-ty) < 100 && t.state === 'hang') {
+                        if(actionType === 'swipe_down') { hit = true; pts = 50; msg = "SMASH!!"; } 
+                        else if(actionType === 'swipe_side') { showFeedback("WRONG!", "red"); adjustDifficulty(false); targets.splice(i,1); return; }
                     }
                 }
-                // ⑦ Feint
+                else if (t.type === 'lob_cut') {
+                    // 青：横スワイプのみ
+                    if(Math.hypot(t.x-tx, t.y-ty) < 100 && t.state === 'hang') {
+                        if(actionType === 'swipe_side') { hit = true; pts = 50; msg = "CUT!"; } 
+                        else if(actionType === 'swipe_down') { showFeedback("WRONG!", "red"); adjustDifficulty(false); targets.splice(i,1); return; }
+                    }
+                }
+                // ⑦ Feint (Touch)
                 else if (t.type === 'feint') {
                     if(Math.hypot(t.x-tx, t.y-ty) < 70) {
-                        if(t.state === 'yellow') { 
-                            hit = true; pts = 100; msg = "READ!"; 
-                        } 
+                        if(t.state === 'yellow') { hit = true; pts = 100; msg = "READ!"; } 
                     }
                 }
 
@@ -701,7 +711,7 @@
                     if(gameMode === 'defense' || gameMode === 'offense') basePts = 50; 
                     if(gameMode === 'rally') basePts = 20;
                     if(gameMode === 'depth') basePts = 70;
-                    if(t.type === 'shuttle' || t.type === 'lob' || t.type === 'feint') pts = basePts;
+                    if(t.type === 'shuttle' || t.type === 'lob_smash' || t.type === 'lob_cut' || t.type === 'feint') pts = basePts;
 
                     let diffBonus = 1.0 + currentDifficulty * 2.0; 
                     let finalPts = Math.floor(pts * diffBonus);
