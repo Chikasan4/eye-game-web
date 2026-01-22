@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Badminton Vision V42</title>
+    <title>Badminton Vision V43</title>
     <style>
         body {
             margin: 0; overflow: hidden;
@@ -90,6 +90,7 @@
         table { border-collapse: collapse; width: 95%; max-width: 400px; color: white; margin-bottom: 20px; font-size: 14px; }
         th, td { border: 1px solid #444; padding: 8px; text-align: center; }
         th { background-color: #222; color: #00FF7F; }
+        .rank-ss { color: #FF00FF; font-weight: 900; text-shadow: 0 0 5px #FF00FF; }
         .rank-s { color: #FFD700; font-weight: 900; text-shadow: 0 0 5px #FFD700; }
         .rank-a { color: #00FF7F; font-weight: bold; }
         .rank-b { color: #00BFFF; }
@@ -108,7 +109,7 @@
 <body>
 
     <div id="menu-screen">
-        <h1>Badminton Vision V42<br><span style="font-size:12px; color:#aaa;">BUG FIX & SAVE</span></h1>
+        <h1>Badminton Vision V43<br><span style="font-size:12px; color:#aaa;">GLOBAL STANDARD</span></h1>
         
         <div class="btn btn-report" onclick="showReport()">📊 総合レポート</div>
 
@@ -149,7 +150,7 @@
 
     <div id="report-screen">
         <h2 style="color:#00FF7F; margin-bottom:5px;">TOTAL REPORT</h2>
-        <div style="font-size:11px; color:#777; margin-bottom:15px;">※データは自動保存されます</div>
+        <div style="font-size:11px; color:#777; margin-bottom:15px;">※全モード基準統一済 (B=800~)</div>
         <table id="report-table"></table>
         <div class="btn btn-reset" onclick="resetData()">全データ消去</div>
         <div class="btn" style="background:#fff; color:#333; margin-top:10px;" onclick="closeReport()">閉じる</div>
@@ -186,9 +187,7 @@
 
         let currentDifficulty = 0.0; 
 
-        // スコア記録
         let lastScores = { saccade: 0, pursuit: 0, depth: 0, reflex: null, defense: 0, offense: 0, rally: 0 };
-        // ベストスコアはLocalStorageから読み込み
         let bestScores = JSON.parse(localStorage.getItem('bv_bestScores')) || { saccade: 0, pursuit: 0, depth: 0, reflex: null, defense: 0, offense: 0, rally: 0 };
 
         let reflexData = [];
@@ -211,7 +210,6 @@
         window.addEventListener('resize', resize);
         resize();
 
-        // ★ データ保存処理
         function saveBestScores() {
             localStorage.setItem('bv_bestScores', JSON.stringify(bestScores));
         }
@@ -255,30 +253,40 @@
             else diffValEl.style.color = "white";
         }
 
+        // ★ V43: 全モード基準統一 (Reflex以外)
         function getRankInfo(mode, val) {
             if (val === null || val === 0) return { rank: "-", title: "-" };
+            
+            // Reflexはmsなので別扱い
             if (mode === 'reflex') {
                 if(val < 180) return { rank: "S", title: "Top Athlete" };
                 if(val < 230) return { rank: "A", title: "Athlete" };
                 if(val < 280) return { rank: "B", title: "General" };
                 return { rank: "C", title: "Beginner" };
             }
-            let s=0, a=0, b=0;
-            if(mode==='saccade') { s=1200; a=800; b=500; }
-            else if(mode==='pursuit') { s=3500; a=2000; b=1000; }
-            else if(mode==='depth') { s=1500; a=1000; b=500; }
-            else if(mode==='defense') { s=2500; a=1500; b=800; }
-            else if(mode==='offense') { s=2500; a=1500; b=800; }
-            else if(mode==='rally') { s=2500; a=1500; b=800; } 
             
-            if(val >= s) return { rank: "S", title: "Top Athlete" };
-            if(val >= a) return { rank: "A", title: "Athlete" };
-            if(val >= b) return { rank: "B", title: "General" };
-            return { rank: "C", title: "Beginner" };
+            // ★統一基準★
+            // SS: 2500+ (神)
+            // S : 2000+ (トップアスリート)
+            // A : 1500+ (アスリート)
+            // B : 800+  (一般)
+            // C : ~799  (ビギナー)
+            
+            let rank="C", title="Beginner";
+            if (val >= 2500) { rank="SS"; title="Legend"; }
+            else if (val >= 2000) { rank="S"; title="Top Athlete"; }
+            else if (val >= 1500) { rank="A"; title="Athlete"; }
+            else if (val >= 800)  { rank="B"; title="General"; }
+            
+            return { rank: rank, title: title };
         }
 
         function getRankColor(rank) {
-            if(rank==="S") return "rank-s"; if(rank==="A") return "rank-a"; if(rank==="B") return "rank-b"; return "rank-c";
+            if(rank==="SS") return "rank-ss";
+            if(rank==="S") return "rank-s"; 
+            if(rank==="A") return "rank-a"; 
+            if(rank==="B") return "rank-b"; 
+            return "rank-c";
         }
 
         function showReport() {
@@ -344,14 +352,11 @@
             gameActive = false;
             clearInterval(gameTimerId);
             cancelAnimationFrame(animationFrameId);
-            
             lastScores[gameMode] = score;
-            // ベスト更新チェック & 保存
             if (bestScores[gameMode] === null || score > bestScores[gameMode]) {
                 bestScores[gameMode] = score;
                 saveBestScores();
             }
-            
             document.getElementById('result-title').innerText = "RESULT";
             document.getElementById('result-main').innerText = score;
             const info = getRankInfo(gameMode, score);
@@ -418,12 +423,13 @@
                 spawnTimer--;
                 if(spawnTimer <= 0) {
                     spawnTarget();
-                    // V40: 実戦は超連射
+                    // V43: 沸き間隔調整
                     if(gameMode==='defense'||gameMode==='offense'||gameMode==='rally') {
                         spawnTimer = Math.max(5, 20 - currentDifficulty*15); 
                     } else if (gameMode==='depth') {
                         spawnTimer = Math.max(10, 25 - currentDifficulty*20);
                     } else {
+                        // Saccade, Pursuit
                         spawnTimer = Math.max(10, 35 - currentDifficulty*25);
                     }
                     if(gameMode==='saccade') spawnTimer = 0;
@@ -559,13 +565,12 @@
                     }
                 }
                 else if (t.type === 'zoom') {
-                    // ★ V42: 深視力修正 (無限ループ解消)
                     if(t.growing) {
                         t.r += t.zSpeed; 
-                        if(t.r >= t.maxR) t.growing = false; // 大きくなりきったら縮小へ
+                        if(t.r >= t.maxR) t.growing = false; 
                     } else {
                         t.r -= t.zSpeed; 
-                        if(t.r <= 0) { // 縮みきったら消滅(MISS)
+                        if(t.r <= 0) { 
                             showFeedback("MISS", "gray");
                             adjustDifficulty(false);
                             targets.splice(i, 1); 
@@ -730,11 +735,16 @@
 
                 if(hit) {
                     t.isHit = true; 
-                    let basePts = 10;
-                    if(gameMode === 'defense' || gameMode === 'offense') basePts = 50; 
-                    if(gameMode === 'rally') basePts = 20;
-                    if(gameMode === 'depth') basePts = 70;
+                    // ★ V43: 得点基準統一 (50点ベースなら2000点行きやすい)
+                    let basePts = 50;
+                    if(gameMode === 'rally') basePts = 30; // ラリーは長いので少し抑える
+                    if(gameMode === 'depth') basePts = 70; // 深視力は球数少ないので高め
+                    if(gameMode === 'saccade') basePts = 30; // 球数多い
+                    
                     if(t.type === 'shuttle' || t.type === 'lob_smash' || t.type === 'lob_cut' || t.type === 'feint') pts = basePts;
+                    
+                    // Saccadeなども統一感のため調整
+                    if(t.type === 'ball') pts = 30;
 
                     let diffBonus = 1.0 + currentDifficulty * 2.0; 
                     let finalPts = Math.floor(pts * diffBonus);
