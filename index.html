@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Badminton Vision V45</title>
+    <title>Badminton Vision V48</title>
     <style>
         body {
             margin: 0; overflow: hidden;
@@ -23,7 +23,7 @@
         
         #combo-display { 
             color: #FFD700; font-size: 24px; font-weight:900; 
-            text-align: center; width: 100%; position: absolute; top: 80px; 
+            text-align: center; width: 100%; position: absolute; top: 90px; 
             opacity: 0; transition: opacity 0.1s; text-shadow: 0 0 10px orange;
         }
 
@@ -33,9 +33,19 @@
         }
         #diff-val { font-size: 20px; font-weight: bold; color: white; }
 
+        /* V48: ダイナミック指示表示エリア */
+        #dynamic-rule {
+            position: absolute; top: 10%; left: 50%; transform: translate(-50%, 0);
+            font-size: 28px; font-weight: 900; color: white;
+            pointer-events: none; white-space: nowrap; z-index: 6;
+            text-shadow: 2px 2px 0 #000;
+            background-color: rgba(0,0,0,0.5); padding: 5px 15px; border-radius: 20px;
+            display: none; 
+        }
+
         #action-guide {
-            position: absolute; top: 15%; left: 50%; transform: translate(-50%, 0);
-            font-size: 24px; font-weight: bold; color: rgba(255,255,255,0.7);
+            position: absolute; top: 20%; left: 50%; transform: translate(-50%, 0);
+            font-size: 20px; font-weight: bold; color: rgba(255,255,255,0.7);
             pointer-events: none; white-space: pre-line; z-index: 5; text-align: center; line-height: 1.4;
             text-shadow: 1px 1px 2px black;
         }
@@ -95,6 +105,14 @@
         .rank-a { color: #00FF7F; font-weight: bold; }
         .rank-b { color: #00BFFF; }
         .rank-c { color: white; }
+
+        #rank-legend {
+            display: flex; flex-wrap: wrap; justify-content: center; gap: 10px;
+            width: 90%; max-width: 350px; margin-bottom: 15px;
+            background: rgba(255,255,255,0.1); padding: 10px; border-radius: 8px;
+        }
+        .legend-item { font-size: 12px; color: #ccc; }
+        .legend-val { font-weight: bold; color: white; margin-left: 3px;}
         
         #reflex-signal {
             display: none; position: absolute; top: 50%; left: 50%; 
@@ -109,12 +127,12 @@
 <body>
 
     <div id="menu-screen">
-        <h1>Badminton Vision V45<br><span style="font-size:12px; color:#aaa;">SACCADE SELECTION</span></h1>
+        <h1>Badminton Vision V48<br><span style="font-size:12px; color:#aaa;">CLIMAX CHANGE</span></h1>
         
         <div class="btn btn-report" onclick="showReport()">📊 総合レポート</div>
 
         <div class="section-title">【A】基礎・眼球トレ</div>
-        <div class="btn btn-vision" onclick="startGame('saccade')">① 跳躍性 (選球眼: 赤禁止)</div>
+        <div class="btn btn-vision" onclick="startGame('saccade')">① 跳躍性 (前半加速 / 後半変化)</div>
         <div class="btn btn-vision" onclick="startGame('pursuit')">② 追従性 (TRACE)</div>
         <div class="btn btn-vision" onclick="startGame('depth')">③ 深視力 (RANDOM)</div>
 
@@ -130,6 +148,7 @@
     <div id="game-container">
         <canvas id="gameCanvas"></canvas>
         <div id="feedback-msg"></div>
+        <div id="dynamic-rule">TARGET: 🟩</div>
         <div id="action-guide"></div>
         <div id="reflex-signal">WAIT</div>
         <div id="combo-display">0 COMBO</div>
@@ -150,7 +169,13 @@
 
     <div id="report-screen">
         <h2 style="color:#00FF7F; margin-bottom:5px;">TOTAL REPORT</h2>
-        <div style="font-size:11px; color:#777; margin-bottom:15px;">※全モード基準統一済 (B=800~)</div>
+        <div id="rank-legend">
+            <div class="legend-item"><span class="rank-ss">SS</span><span class="legend-val">2500~</span></div>
+            <div class="legend-item"><span class="rank-s">S</span><span class="legend-val">2000~</span></div>
+            <div class="legend-item"><span class="rank-a">A</span><span class="legend-val">1500~</span></div>
+            <div class="legend-item"><span class="rank-b">B</span><span class="legend-val">800~</span></div>
+            <div class="legend-item"><span class="rank-c">C</span><span class="legend-val">~799</span></div>
+        </div>
         <table id="report-table"></table>
         <div class="btn btn-reset" onclick="resetData()">全データ消去</div>
         <div class="btn" style="background:#fff; color:#333; margin-top:10px;" onclick="closeReport()">閉じる</div>
@@ -167,6 +192,7 @@
         const hudRight = document.getElementById('hud-right');
         const feedbackEl = document.getElementById('feedback-msg');
         const actionGuideEl = document.getElementById('action-guide');
+        const dynamicRuleEl = document.getElementById('dynamic-rule');
         const comboEl = document.getElementById('combo-display');
         const diffValEl = document.getElementById('diff-val');
         const reflexSignal = document.getElementById('reflex-signal');
@@ -186,6 +212,11 @@
         let resultLockTimer;
 
         let currentDifficulty = 0.0; 
+
+        // V48: ①用 変数
+        let saccadeTargetColor = 'green'; 
+        let saccadeSwitchTimer = 0;
+        let saccadePhase = 1; // 1:前半(簡単), 2:後半(激ムズ)
 
         let lastScores = { saccade: 0, pursuit: 0, depth: 0, reflex: null, defense: 0, offense: 0, rally: 0 };
         let bestScores = JSON.parse(localStorage.getItem('bv_bestScores')) || { saccade: 0, pursuit: 0, depth: 0, reflex: null, defense: 0, offense: 0, rally: 0 };
@@ -299,6 +330,18 @@
         }
         function closeReport() { reportScreen.style.display = 'none'; menuScreen.style.display = 'flex'; }
 
+        function updateSaccadeRule() {
+            if(saccadeTargetColor === 'green') {
+                dynamicRuleEl.innerText = "TARGET: 🟩 GREEN";
+                dynamicRuleEl.style.color = "#00FF7F";
+                dynamicRuleEl.style.border = "2px solid #00FF7F";
+            } else {
+                dynamicRuleEl.innerText = "TARGET: 🟥 RED";
+                dynamicRuleEl.style.color = "#FF4500";
+                dynamicRuleEl.style.border = "2px solid #FF4500";
+            }
+        }
+
         function startGame(mode) {
             gameMode = mode;
             menuScreen.style.display = 'none';
@@ -306,12 +349,19 @@
             gameContainer.style.display = 'block';
             reflexSignal.style.display = 'none';
             actionGuideEl.innerText = "";
+            dynamicRuleEl.style.display = 'none';
             score = 0; combo = 0; targets = []; effects = []; gameActive = true; spawnTimer = 0;
             currentDifficulty = 0.0; 
             comboEl.style.opacity = 0;
             updateDiffDisplay();
 
-            if(mode === 'saccade') actionGuideEl.innerText = "🟩:TAP / 🟥:DON'T!";
+            if(mode === 'saccade') {
+                dynamicRuleEl.style.display = 'block';
+                saccadeTargetColor = 'green';
+                saccadePhase = 1; // 前半スタート
+                saccadeSwitchTimer = 0; // 前半はスイッチしない
+                updateSaccadeRule();
+            }
             if(mode === 'defense') actionGuideEl.innerText = "TAP!";
             if(mode === 'offense') actionGuideEl.innerText = "🔴 ↓ SMASH\n🔵 ↔ CUT";
             if(mode === 'rally') actionGuideEl.innerText = "MIX!";
@@ -333,6 +383,14 @@
             gameTimerId = setInterval(() => {
                 timeLeft--;
                 hudRight.innerText = `Time: ${timeLeft}`;
+                
+                // ★ V48: 残り15秒で後半戦へ
+                if (gameMode === 'saccade' && timeLeft === 15) {
+                    saccadePhase = 2;
+                    showFeedback("⚠️ RULE CHANGE!", "yellow");
+                    saccadeSwitchTimer = 120; // 2秒後に最初の切り替え
+                }
+
                 if (timeLeft <= 0) finishGame();
             }, 1000);
         }
@@ -408,11 +466,21 @@
             ctx.fillStyle = "#8B4513"; ctx.fillRect(0,0,width,height);
             if(['defense', 'offense', 'rally'].includes(gameMode)) drawCourt();
 
+            // V48: Saccade ルール切り替え (Phase 2のみ)
+            if(gameMode === 'saccade' && saccadePhase === 2) {
+                saccadeSwitchTimer--;
+                if(saccadeSwitchTimer <= 0) {
+                    saccadeTargetColor = (saccadeTargetColor === 'green') ? 'red' : 'green';
+                    updateSaccadeRule();
+                    showFeedback("CHANGE!", "yellow");
+                    saccadeSwitchTimer = 180 + Math.random() * 180;
+                }
+            }
+
             if (targets.length === 0) {
                 spawnTimer--;
                 if(spawnTimer <= 0) {
                     spawnTarget();
-                    // V45: 沸き調整
                     if(gameMode==='defense'||gameMode==='offense'||gameMode==='rally') {
                         spawnTimer = Math.max(5, 20 - currentDifficulty*15); 
                     } else if (gameMode==='depth') {
@@ -446,10 +514,16 @@
                 const r = 35;
                 let life = 70 - (d * 40); 
                 
-                // ★ V45: お邪魔玉 (Red Enemy)
-                let isEnemy = Math.random() < 0.2; // 20%で赤
-                let color = isEnemy ? '#FF4500' : '#00FF7F'; // OrangeRed vs SpringGreen
-                let type = isEnemy ? 'saccade_enemy' : 'saccade_target';
+                // ★ V48: 前半は緑のみ、後半は赤緑ランダム
+                let color, type;
+                if (saccadePhase === 1) {
+                    color = '#00FF7F'; // Green
+                    type = 'green_ball';
+                } else {
+                    let isRed = Math.random() < 0.5; 
+                    color = isRed ? '#FF4500' : '#00FF7F'; 
+                    type = isRed ? 'red_ball' : 'green_ball';
+                }
                 
                 targets.push({ x: Math.random()*(width-2*r)+r, y: Math.random()*(height-2*r)+r, r: r, color: color, type: type, life: life, maxLife: life, isHit: false });
             }
@@ -535,13 +609,13 @@
                 const t = targets[i];
                 if (t.isHit) { targets.splice(i, 1); continue; }
 
-                // ① Saccade (Target & Enemy)
-                if (t.type === 'saccade_target' || t.type === 'saccade_enemy') {
+                if (t.type === 'green_ball' || t.type === 'red_ball') {
                     t.life--;
                     if(t.life<=0) { 
                         targets.splice(i,1); 
-                        // Enemyなら消えてOK, TargetならMiss扱い(コンボ切る)
-                        if(t.type === 'saccade_target') adjustDifficulty(false);
+                        // TargetならMiss扱い(コンボ切る)
+                        let isTarget = (saccadeTargetColor==='green' && t.type==='green_ball') || (saccadeTargetColor==='red' && t.type==='red_ball');
+                        if(isTarget) adjustDifficulty(false);
                     } 
                     else { let alpha = t.life / t.maxLife; drawCircle(t.x, t.y, t.r, t.color, alpha); }
                 }
@@ -651,7 +725,6 @@
             ctx.lineTo(x-r*0.7, y-r*1.4); ctx.lineTo(x+r*0.7, y-r*1.4); ctx.fill();
         }
 
-        // 入力処理（タップ＆スワイプ）
         function handleStart(e) {
             if(!gameActive) return;
             const touches = e.changedTouches || [e];
@@ -676,9 +749,13 @@
             for(let t of touches) {
                 let dx = t.clientX - startX;
                 let dy = t.clientY - startY;
-                if (dy > 30 && Math.abs(dx) < 30) {
-                    checkHit(startX, startY, 'swipe_down');
-                } else if (Math.abs(dx) > 30 && Math.abs(dy) < 30) {
+                if (Math.abs(dx) < 30 && Math.abs(dy) < 30) {
+                    isTouching = false;
+                    return;
+                }
+                if (Math.abs(dy) > Math.abs(dx)) {
+                    if (dy > 0) checkHit(startX, startY, 'swipe_down');
+                } else {
                     checkHit(startX, startY, 'swipe_side');
                 }
             }
@@ -694,36 +771,46 @@
 
                 let hit = false; let pts = 0; let msg = "";
 
-                // ★ V45: Saccade (Target=Green, Enemy=Red)
-                if (t.type === 'saccade_target') { 
-                    if(actionType === 'tap' && Math.hypot(t.x-tx, t.y-ty) < t.r + 20) { hit = true; pts = 30; msg = "HIT"; }
-                }
-                else if (t.type === 'saccade_enemy') { 
-                    if(actionType === 'tap' && Math.hypot(t.x-tx, t.y-ty) < t.r + 20) {
-                        // 赤を叩いたらペナルティ
-                        showFeedback("DON'T TOUCH!", "red");
-                        adjustDifficulty(false); // コンボリセット
-                        score -= 50; // 減点
-                        hudLeft.innerText = `Score: ${score}`;
-                        targets.splice(i, 1);
-                        return; // 処理終了
+                if (gameMode === 'saccade') {
+                    // ★ V48: Phase1(GreenOnly) or Phase2(Mixed)
+                    if (t.type === 'green_ball' || t.type === 'red_ball') {
+                        if (actionType === 'tap' && Math.hypot(t.x-tx, t.y-ty) < t.r + 20) {
+                            
+                            // 前半は緑のみなので、緑ならOK
+                            let isCorrect = false;
+                            if(saccadePhase === 1) {
+                                if(t.type === 'green_ball') isCorrect = true;
+                            } else {
+                                // 後半はルール通り
+                                if (saccadeTargetColor === 'green' && t.type === 'green_ball') isCorrect = true;
+                                if (saccadeTargetColor === 'red' && t.type === 'red_ball') isCorrect = true;
+                            }
+
+                            if (isCorrect) {
+                                hit = true; pts = 30; msg = "HIT";
+                            } else {
+                                showFeedback("-5 SEC!", "red");
+                                adjustDifficulty(false);
+                                timeLeft -= 5;
+                                hudRight.innerText = `Time: ${Math.max(0, timeLeft)}`;
+                                targets.splice(i, 1);
+                                return;
+                            }
+                        }
                     }
                 }
-                // ③ Depth
                 else if (t.type === 'zoom') { 
                     if(actionType === 'tap' && Math.hypot(t.x-tx, t.y-ty) < t.r + 20) {
                         if (t.r > t.maxR*0.8) { hit = true; pts = 70; msg = "GOOD!"; }
                         else { showFeedback("WAIT", "orange"); return; }
                     }
                 }
-                // ⑤ Defense
                 else if (t.type === 'shuttle') { 
                     if(actionType === 'tap' && Math.hypot(t.x-tx, t.y-ty) < 70) {
                         if(t.state === 'yellow') { hit = true; pts = 50; msg = "NICE"; }
                         else { showFeedback("TIMING...", "orange"); return; }
                     }
                 }
-                // ⑥ Offense (Choice)
                 else if (t.type === 'lob_smash') {
                     if(Math.hypot(t.x-tx, t.y-ty) < 100 && t.state === 'hang') {
                         if(actionType === 'swipe_down') { hit = true; pts = 50; msg = "SMASH!!"; } 
@@ -736,7 +823,6 @@
                         else if(actionType === 'swipe_down') { showFeedback("WRONG!", "red"); adjustDifficulty(false); targets.splice(i,1); return; }
                     }
                 }
-                // ⑦ Feint
                 else if (t.type === 'feint') {
                     if(Math.hypot(t.x-tx, t.y-ty) < 70) {
                         if(t.state === 'yellow') { hit = true; pts = 100; msg = "READ!"; } 
@@ -749,7 +835,7 @@
                     if(gameMode === 'rally') basePts = 30; 
                     if(gameMode === 'depth') basePts = 70; 
                     if(t.type === 'shuttle' || t.type === 'lob_smash' || t.type === 'lob_cut' || t.type === 'feint') pts = basePts;
-                    if(t.type === 'saccade_target') pts = 30; // 緑ボール
+                    if(t.type === 'green_ball' || t.type === 'red_ball') pts = 30; 
 
                     let diffBonus = 1.0 + currentDifficulty * 2.0; 
                     let finalPts = Math.floor(pts * diffBonus);
