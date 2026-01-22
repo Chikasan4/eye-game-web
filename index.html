@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Badminton Vision V43</title>
+    <title>Badminton Vision V45</title>
     <style>
         body {
             margin: 0; overflow: hidden;
@@ -109,12 +109,12 @@
 <body>
 
     <div id="menu-screen">
-        <h1>Badminton Vision V43<br><span style="font-size:12px; color:#aaa;">GLOBAL STANDARD</span></h1>
+        <h1>Badminton Vision V45<br><span style="font-size:12px; color:#aaa;">SACCADE SELECTION</span></h1>
         
         <div class="btn btn-report" onclick="showReport()">📊 総合レポート</div>
 
         <div class="section-title">【A】基礎・眼球トレ</div>
-        <div class="btn btn-vision" onclick="startGame('saccade')">① 跳躍性 (TAP)</div>
+        <div class="btn btn-vision" onclick="startGame('saccade')">① 跳躍性 (選球眼: 赤禁止)</div>
         <div class="btn btn-vision" onclick="startGame('pursuit')">② 追従性 (TRACE)</div>
         <div class="btn btn-vision" onclick="startGame('depth')">③ 深視力 (RANDOM)</div>
 
@@ -253,31 +253,19 @@
             else diffValEl.style.color = "white";
         }
 
-        // ★ V43: 全モード基準統一 (Reflex以外)
         function getRankInfo(mode, val) {
             if (val === null || val === 0) return { rank: "-", title: "-" };
-            
-            // Reflexはmsなので別扱い
             if (mode === 'reflex') {
                 if(val < 180) return { rank: "S", title: "Top Athlete" };
                 if(val < 230) return { rank: "A", title: "Athlete" };
                 if(val < 280) return { rank: "B", title: "General" };
                 return { rank: "C", title: "Beginner" };
             }
-            
-            // ★統一基準★
-            // SS: 2500+ (神)
-            // S : 2000+ (トップアスリート)
-            // A : 1500+ (アスリート)
-            // B : 800+  (一般)
-            // C : ~799  (ビギナー)
-            
             let rank="C", title="Beginner";
             if (val >= 2500) { rank="SS"; title="Legend"; }
             else if (val >= 2000) { rank="S"; title="Top Athlete"; }
             else if (val >= 1500) { rank="A"; title="Athlete"; }
             else if (val >= 800)  { rank="B"; title="General"; }
-            
             return { rank: rank, title: title };
         }
 
@@ -323,6 +311,7 @@
             comboEl.style.opacity = 0;
             updateDiffDisplay();
 
+            if(mode === 'saccade') actionGuideEl.innerText = "🟩:TAP / 🟥:DON'T!";
             if(mode === 'defense') actionGuideEl.innerText = "TAP!";
             if(mode === 'offense') actionGuideEl.innerText = "🔴 ↓ SMASH\n🔵 ↔ CUT";
             if(mode === 'rally') actionGuideEl.innerText = "MIX!";
@@ -423,13 +412,12 @@
                 spawnTimer--;
                 if(spawnTimer <= 0) {
                     spawnTarget();
-                    // V43: 沸き間隔調整
+                    // V45: 沸き調整
                     if(gameMode==='defense'||gameMode==='offense'||gameMode==='rally') {
                         spawnTimer = Math.max(5, 20 - currentDifficulty*15); 
                     } else if (gameMode==='depth') {
                         spawnTimer = Math.max(10, 25 - currentDifficulty*20);
                     } else {
-                        // Saccade, Pursuit
                         spawnTimer = Math.max(10, 35 - currentDifficulty*25);
                     }
                     if(gameMode==='saccade') spawnTimer = 0;
@@ -457,7 +445,13 @@
             if (gameMode === 'saccade') {
                 const r = 35;
                 let life = 70 - (d * 40); 
-                targets.push({ x: Math.random()*(width-2*r)+r, y: Math.random()*(height-2*r)+r, r: r, color: '#00FF7F', type: 'ball', life: life, maxLife: life, isHit: false });
+                
+                // ★ V45: お邪魔玉 (Red Enemy)
+                let isEnemy = Math.random() < 0.2; // 20%で赤
+                let color = isEnemy ? '#FF4500' : '#00FF7F'; // OrangeRed vs SpringGreen
+                let type = isEnemy ? 'saccade_enemy' : 'saccade_target';
+                
+                targets.push({ x: Math.random()*(width-2*r)+r, y: Math.random()*(height-2*r)+r, r: r, color: color, type: type, life: life, maxLife: life, isHit: false });
             }
             else if (gameMode === 'pursuit') {
                 let spd = 0.03 + (d * 0.05); 
@@ -541,9 +535,14 @@
                 const t = targets[i];
                 if (t.isHit) { targets.splice(i, 1); continue; }
 
-                if (t.type === 'ball') {
+                // ① Saccade (Target & Enemy)
+                if (t.type === 'saccade_target' || t.type === 'saccade_enemy') {
                     t.life--;
-                    if(t.life<=0) { targets.splice(i,1); adjustDifficulty(false); } 
+                    if(t.life<=0) { 
+                        targets.splice(i,1); 
+                        // Enemyなら消えてOK, TargetならMiss扱い(コンボ切る)
+                        if(t.type === 'saccade_target') adjustDifficulty(false);
+                    } 
                     else { let alpha = t.life / t.maxLife; drawCircle(t.x, t.y, t.r, t.color, alpha); }
                 }
                 else if (t.type === 'moving') {
@@ -599,7 +598,6 @@
                     } else if (t.state === 'falling') {
                         t.y += 15; 
                     }
-                    
                     let currentR = 50; 
                     let color = (t.type === 'lob_smash') ? "#FF4500" : "#00BFFF";
                     if (t.state === 'falling') color = "gray";
@@ -610,7 +608,6 @@
                         let txt = (t.type==='lob_smash') ? "↓" : "↔";
                         ctx.fillText(txt, t.x-10, t.y-60);
                     }
-
                     if (t.y > height + 50) { if (!t.isHit) { showFeedback("MISS", "gray"); adjustDifficulty(false); targets.splice(i, 1); } }
                 }
                 else if (t.type === 'feint') {
@@ -654,6 +651,7 @@
             ctx.lineTo(x-r*0.7, y-r*1.4); ctx.lineTo(x+r*0.7, y-r*1.4); ctx.fill();
         }
 
+        // 入力処理（タップ＆スワイプ）
         function handleStart(e) {
             if(!gameActive) return;
             const touches = e.changedTouches || [e];
@@ -661,6 +659,7 @@
                 startX = t.clientX; startY = t.clientY;
                 currentX = startX; currentY = startY;
                 isTouching = true; 
+                // Defense & Saccade はタップ
                 if(gameMode !== 'offense') checkHit(startX, startY, 'tap');
             }
         }
@@ -695,9 +694,20 @@
 
                 let hit = false; let pts = 0; let msg = "";
 
-                // ① Saccade
-                if (t.type === 'ball') { 
-                    if(actionType === 'tap' && Math.hypot(t.x-tx, t.y-ty) < t.r + 20) { hit = true; pts = 10; msg = "HIT"; }
+                // ★ V45: Saccade (Target=Green, Enemy=Red)
+                if (t.type === 'saccade_target') { 
+                    if(actionType === 'tap' && Math.hypot(t.x-tx, t.y-ty) < t.r + 20) { hit = true; pts = 30; msg = "HIT"; }
+                }
+                else if (t.type === 'saccade_enemy') { 
+                    if(actionType === 'tap' && Math.hypot(t.x-tx, t.y-ty) < t.r + 20) {
+                        // 赤を叩いたらペナルティ
+                        showFeedback("DON'T TOUCH!", "red");
+                        adjustDifficulty(false); // コンボリセット
+                        score -= 50; // 減点
+                        hudLeft.innerText = `Score: ${score}`;
+                        targets.splice(i, 1);
+                        return; // 処理終了
+                    }
                 }
                 // ③ Depth
                 else if (t.type === 'zoom') { 
@@ -735,16 +745,11 @@
 
                 if(hit) {
                     t.isHit = true; 
-                    // ★ V43: 得点基準統一 (50点ベースなら2000点行きやすい)
                     let basePts = 50;
-                    if(gameMode === 'rally') basePts = 30; // ラリーは長いので少し抑える
-                    if(gameMode === 'depth') basePts = 70; // 深視力は球数少ないので高め
-                    if(gameMode === 'saccade') basePts = 30; // 球数多い
-                    
+                    if(gameMode === 'rally') basePts = 30; 
+                    if(gameMode === 'depth') basePts = 70; 
                     if(t.type === 'shuttle' || t.type === 'lob_smash' || t.type === 'lob_cut' || t.type === 'feint') pts = basePts;
-                    
-                    // Saccadeなども統一感のため調整
-                    if(t.type === 'ball') pts = 30;
+                    if(t.type === 'saccade_target') pts = 30; // 緑ボール
 
                     let diffBonus = 1.0 + currentDifficulty * 2.0; 
                     let finalPts = Math.floor(pts * diffBonus);
