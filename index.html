@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Badminton Vision V48</title>
+    <title>Badminton Vision V49</title>
     <style>
         body {
             margin: 0; overflow: hidden;
@@ -33,7 +33,6 @@
         }
         #diff-val { font-size: 20px; font-weight: bold; color: white; }
 
-        /* V48: ダイナミック指示表示エリア */
         #dynamic-rule {
             position: absolute; top: 10%; left: 50%; transform: translate(-50%, 0);
             font-size: 28px; font-weight: 900; color: white;
@@ -127,7 +126,7 @@
 <body>
 
     <div id="menu-screen">
-        <h1>Badminton Vision V48<br><span style="font-size:12px; color:#aaa;">CLIMAX CHANGE</span></h1>
+        <h1>Badminton Vision V49<br><span style="font-size:12px; color:#aaa;">SAFE ZONE SPAWN</span></h1>
         
         <div class="btn btn-report" onclick="showReport()">📊 総合レポート</div>
 
@@ -213,10 +212,9 @@
 
         let currentDifficulty = 0.0; 
 
-        // V48: ①用 変数
         let saccadeTargetColor = 'green'; 
         let saccadeSwitchTimer = 0;
-        let saccadePhase = 1; // 1:前半(簡単), 2:後半(激ムズ)
+        let saccadePhase = 1; 
 
         let lastScores = { saccade: 0, pursuit: 0, depth: 0, reflex: null, defense: 0, offense: 0, rally: 0 };
         let bestScores = JSON.parse(localStorage.getItem('bv_bestScores')) || { saccade: 0, pursuit: 0, depth: 0, reflex: null, defense: 0, offense: 0, rally: 0 };
@@ -358,8 +356,8 @@
             if(mode === 'saccade') {
                 dynamicRuleEl.style.display = 'block';
                 saccadeTargetColor = 'green';
-                saccadePhase = 1; // 前半スタート
-                saccadeSwitchTimer = 0; // 前半はスイッチしない
+                saccadePhase = 1; 
+                saccadeSwitchTimer = 0; 
                 updateSaccadeRule();
             }
             if(mode === 'defense') actionGuideEl.innerText = "TAP!";
@@ -384,11 +382,10 @@
                 timeLeft--;
                 hudRight.innerText = `Time: ${timeLeft}`;
                 
-                // ★ V48: 残り15秒で後半戦へ
                 if (gameMode === 'saccade' && timeLeft === 15) {
                     saccadePhase = 2;
                     showFeedback("⚠️ RULE CHANGE!", "yellow");
-                    saccadeSwitchTimer = 120; // 2秒後に最初の切り替え
+                    saccadeSwitchTimer = 120; 
                 }
 
                 if (timeLeft <= 0) finishGame();
@@ -466,7 +463,6 @@
             ctx.fillStyle = "#8B4513"; ctx.fillRect(0,0,width,height);
             if(['defense', 'offense', 'rally'].includes(gameMode)) drawCourt();
 
-            // V48: Saccade ルール切り替え (Phase 2のみ)
             if(gameMode === 'saccade' && saccadePhase === 2) {
                 saccadeSwitchTimer--;
                 if(saccadeSwitchTimer <= 0) {
@@ -514,10 +510,15 @@
                 const r = 35;
                 let life = 70 - (d * 40); 
                 
-                // ★ V48: 前半は緑のみ、後半は赤緑ランダム
+                // ★ V49: 聖域確保 (Safe Zone)
+                // 画面上部25%にはボールを出さない
+                let minY = height * 0.25;
+                let maxY = height - r;
+                let safeY = Math.random() * (maxY - minY) + minY;
+
                 let color, type;
                 if (saccadePhase === 1) {
-                    color = '#00FF7F'; // Green
+                    color = '#00FF7F'; 
                     type = 'green_ball';
                 } else {
                     let isRed = Math.random() < 0.5; 
@@ -525,7 +526,8 @@
                     type = isRed ? 'red_ball' : 'green_ball';
                 }
                 
-                targets.push({ x: Math.random()*(width-2*r)+r, y: Math.random()*(height-2*r)+r, r: r, color: color, type: type, life: life, maxLife: life, isHit: false });
+                // Xはランダム、YはSafeZone
+                targets.push({ x: Math.random()*(width-2*r)+r, y: safeY, r: r, color: color, type: type, life: life, maxLife: life, isHit: false });
             }
             else if (gameMode === 'pursuit') {
                 let spd = 0.03 + (d * 0.05); 
@@ -613,7 +615,6 @@
                     t.life--;
                     if(t.life<=0) { 
                         targets.splice(i,1); 
-                        // TargetならMiss扱い(コンボ切る)
                         let isTarget = (saccadeTargetColor==='green' && t.type==='green_ball') || (saccadeTargetColor==='red' && t.type==='red_ball');
                         if(isTarget) adjustDifficulty(false);
                     } 
@@ -772,16 +773,13 @@
                 let hit = false; let pts = 0; let msg = "";
 
                 if (gameMode === 'saccade') {
-                    // ★ V48: Phase1(GreenOnly) or Phase2(Mixed)
                     if (t.type === 'green_ball' || t.type === 'red_ball') {
                         if (actionType === 'tap' && Math.hypot(t.x-tx, t.y-ty) < t.r + 20) {
                             
-                            // 前半は緑のみなので、緑ならOK
                             let isCorrect = false;
                             if(saccadePhase === 1) {
                                 if(t.type === 'green_ball') isCorrect = true;
                             } else {
-                                // 後半はルール通り
                                 if (saccadeTargetColor === 'green' && t.type === 'green_ball') isCorrect = true;
                                 if (saccadeTargetColor === 'red' && t.type === 'red_ball') isCorrect = true;
                             }
@@ -835,7 +833,7 @@
                     if(gameMode === 'rally') basePts = 30; 
                     if(gameMode === 'depth') basePts = 70; 
                     if(t.type === 'shuttle' || t.type === 'lob_smash' || t.type === 'lob_cut' || t.type === 'feint') pts = basePts;
-                    if(t.type === 'green_ball' || t.type === 'red_ball') pts = 30; 
+                    if(gameMode === 'saccade') pts = 30; 
 
                     let diffBonus = 1.0 + currentDifficulty * 2.0; 
                     let finalPts = Math.floor(pts * diffBonus);
