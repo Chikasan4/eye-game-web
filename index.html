@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Badminton Vision V49</title>
+    <title>Badminton Vision V50</title>
     <style>
         body {
             margin: 0; overflow: hidden;
@@ -126,12 +126,12 @@
 <body>
 
     <div id="menu-screen">
-        <h1>Badminton Vision V49<br><span style="font-size:12px; color:#aaa;">SAFE ZONE SPAWN</span></h1>
+        <h1>Badminton Vision V50<br><span style="font-size:12px; color:#aaa;">HIGH SPEED CLIMAX</span></h1>
         
         <div class="btn btn-report" onclick="showReport()">📊 総合レポート</div>
 
         <div class="section-title">【A】基礎・眼球トレ</div>
-        <div class="btn btn-vision" onclick="startGame('saccade')">① 跳躍性 (前半加速 / 後半変化)</div>
+        <div class="btn btn-vision" onclick="startGame('saccade')">① 跳躍性 (後半20秒: 高速化)</div>
         <div class="btn btn-vision" onclick="startGame('pursuit')">② 追従性 (TRACE)</div>
         <div class="btn btn-vision" onclick="startGame('depth')">③ 深視力 (RANDOM)</div>
 
@@ -382,7 +382,8 @@
                 timeLeft--;
                 hudRight.innerText = `Time: ${timeLeft}`;
                 
-                if (gameMode === 'saccade' && timeLeft === 15) {
+                // ★ V50: 残り20秒で後半戦へ
+                if (gameMode === 'saccade' && timeLeft === 20) {
                     saccadePhase = 2;
                     showFeedback("⚠️ RULE CHANGE!", "yellow");
                     saccadeSwitchTimer = 120; 
@@ -509,9 +510,11 @@
             if (gameMode === 'saccade') {
                 const r = 35;
                 let life = 70 - (d * 40); 
+                // ★ V50: Phase 2 (後半) はLifeを0.7倍にして高速消滅させる
+                if (saccadePhase === 2) {
+                    life = life * 0.7; // 30% Speed UP (Duration Shortened)
+                }
                 
-                // ★ V49: 聖域確保 (Safe Zone)
-                // 画面上部25%にはボールを出さない
                 let minY = height * 0.25;
                 let maxY = height - r;
                 let safeY = Math.random() * (maxY - minY) + minY;
@@ -526,7 +529,6 @@
                     type = isRed ? 'red_ball' : 'green_ball';
                 }
                 
-                // Xはランダム、YはSafeZone
                 targets.push({ x: Math.random()*(width-2*r)+r, y: safeY, r: r, color: color, type: type, life: life, maxLife: life, isHit: false });
             }
             else if (gameMode === 'pursuit') {
