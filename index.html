@@ -12,180 +12,87 @@
             font-family: sans-serif; color: white; touch-action: none;
             user-select: none; -webkit-user-select: none;
         }
-        #game-container { display: none; width: 100%; height: 100%;
-        }
-        canvas { display: block;
-        }
-        
+        #game-container { display: none; width: 100%; height: 100%; }
+        canvas { display: block; }
         #ui-layer {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
             pointer-events: none; padding: 15px; box-sizing: border-box;
             display: flex; justify-content: space-between;
         }
-        .hud { font-size: 18px; font-weight: bold; text-shadow: 1px 1px 2px black;
-        font-family: monospace; }
-        
+        .hud { font-size: 18px; font-weight: bold; text-shadow: 1px 1px 2px black; font-family: monospace; }
         #combo-display { 
-            color: #FFD700;
-            font-size: 24px; font-weight:900; 
+            color: #FFD700; font-size: 24px; font-weight:900; 
             text-align: center; width: 100%; position: absolute; top: 90px; 
-            opacity: 0; transition: opacity 0.1s;
-            text-shadow: 0 0 10px orange;
+            opacity: 0; transition: opacity 0.1s; text-shadow: 0 0 10px orange;
         }
-
-        #diff-display {
-            position: absolute;
-            bottom: 20px; right: 20px;
-            font-size: 14px; color: #aaa; text-align: right;
-        }
-        #diff-val { font-size: 20px; font-weight: bold; color: white;
-        }
-
+        #diff-display { position: absolute; bottom: 20px; right: 20px; font-size: 14px; color: #aaa; text-align: right; }
+        #diff-val { font-size: 20px; font-weight: bold; color: white; }
         #dynamic-rule {
-            position: absolute;
-            top: 10%; left: 50%; transform: translate(-50%, 0);
+            position: absolute; top: 10%; left: 50%; transform: translate(-50%, 0);
             font-size: 28px; font-weight: 900; color: white;
             pointer-events: none; white-space: nowrap; z-index: 6;
-            text-shadow: 2px 2px 0 #000;
-            background-color: rgba(0,0,0,0.5); padding: 5px 15px; border-radius: 20px;
+            text-shadow: 2px 2px 0 #000; background-color: rgba(0,0,0,0.5); padding: 5px 15px; border-radius: 20px;
             display: none;
         }
-
         #action-guide {
-            position: absolute;
-            top: 20%; left: 50%; transform: translate(-50%, 0);
+            position: absolute; top: 20%; left: 50%; transform: translate(-50%, 0);
             font-size: 20px; font-weight: bold; color: rgba(255,255,255,0.7);
             pointer-events: none; white-space: pre-line; z-index: 5;
-            text-align: center; line-height: 1.4;
-            text-shadow: 1px 1px 2px black;
+            text-align: center; line-height: 1.4; text-shadow: 1px 1px 2px black;
         }
-
         #menu-screen {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background-color: rgba(0,0,0,0.92); display: flex; flex-direction: column;
             align-items: center; justify-content: flex-start; z-index: 100;
             overflow-y: auto; padding-top: 20px; padding-bottom: 40px;
         }
-        h1 { margin: 10px 0 10px 0;
-            font-size: 22px; text-align: center; color: #00FF7F; border-bottom: 2px solid #00FF7F; padding-bottom: 5px;
-        }
-        
-        .section-title {
-            color: #ddd;
-            font-size: 13px; margin-top: 15px; margin-bottom: 5px; 
-            width: 90%; max-width: 350px; text-align: left; border-left: 3px solid #00FF7F; padding-left: 8px;
-        }
-        
-        .btn {
-            width: 90%;
-            max-width: 350px; padding: 14px; margin: 6px 0;
-            font-size: 16px; font-weight: bold; color: white;
-            background-color: #333; border: 1px solid #555;
-            border-radius: 6px; cursor: pointer; text-align: center;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.5);
-        }
-        .btn:active { transform: scale(0.98); background-color: #444;
-        }
-        
-        .btn-vision { background-color: #2F4F4F;
-            border-color: #00FA9A; color: #00FA9A; }
-        .btn-measure { background-color: #8B0000; border-color: #FF6347; color: white;
-        }
-        .btn-def { background-color: #191970; border-color: #4169E1;
-        }
+        h1 { margin: 10px 0 10px 0; font-size: 22px; text-align: center; color: #00FF7F; border-bottom: 2px solid #00FF7F; padding-bottom: 5px; }
+        .section-title { color: #ddd; font-size: 13px; margin-top: 15px; margin-bottom: 5px; width: 90%; max-width: 350px; text-align: left; border-left: 3px solid #00FF7F; padding-left: 8px; }
+        .btn { width: 90%; max-width: 350px; padding: 14px; margin: 6px 0; font-size: 16px; font-weight: bold; color: white; background-color: #333; border: 1px solid #555; border-radius: 6px; cursor: pointer; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.5); }
+        .btn:active { transform: scale(0.98); background-color: #444; }
+        .btn-vision { background-color: #2F4F4F; border-color: #00FA9A; color: #00FA9A; }
+        .btn-measure { background-color: #8B0000; border-color: #FF6347; color: white; }
+        .btn-def { background-color: #191970; border-color: #4169E1; }
         .btn-off { background-color: #8B4500; border-color: #FFA500; }
-        .btn-rally { background-color: #4B0082; border-color: #9370DB; } 
+        .btn-rally { background-color: #4B0082; border-color: #9370DB; }
         .btn-report { background-color: #333; border-color: #fff; margin-top: 20px; }
-        .btn-reset { background-color: #555; border-color: #777; font-size: 12px; padding: 8px; margin-top: 20px;
-        width: 150px;}
-
-        #feedback-msg {
-            position: absolute;
-            top: 40%; left: 50%; transform: translate(-50%, -50%);
-            font-size: 40px; font-weight: 900; opacity: 0; pointer-events: none;
-            transition: opacity 0.1s;
-            text-shadow: 2px 2px 0 #000; z-index: 20; white-space: nowrap;
-        }
-
-        #result-screen, #report-screen {
-            display: none;
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background-color: rgba(0,0,0,0.95); flex-direction: column;
-            align-items: center; justify-content: center; z-index: 150;
-        }
-        #result-title { font-size: 20px; margin-bottom: 10px; color: #aaa;
-        }
-        #result-main { font-size: 50px; font-weight: 900; color: #00FF7F; margin-bottom: 15px; text-align: center;
-        white-space: pre-line;}
-        #result-sub { font-size: 16px; color: #ccc; margin-bottom: 30px; text-align: center;
-        line-height: 1.6; padding: 0 20px;}
-        
-        #close-result-btn { background:#fff;
-        color:#000; border:none; font-weight:900; }
-
-        table { border-collapse: collapse; width: 95%; max-width: 400px;
-        color: white; margin-bottom: 20px; font-size: 14px; }
-        th, td { border: 1px solid #444;
-        padding: 8px; text-align: center; }
-        th { background-color: #222; color: #00FF7F;
-        }
-        .rank-ss { color: #FF00FF; font-weight: 900; text-shadow: 0 0 5px #FF00FF;
-        }
-        .rank-s { color: #FFD700; font-weight: 900; text-shadow: 0 0 5px #FFD700;
-        }
-        .rank-a { color: #00FF7F; font-weight: bold;
-        }
-        .rank-b { color: #00BFFF;
-        }
-        .rank-c { color: white;
-        }
-
-        #rank-legend {
-            display: flex;
-            flex-wrap: wrap; justify-content: center; gap: 10px;
-            width: 90%; max-width: 350px; margin-bottom: 15px;
-            background: rgba(255,255,255,0.1); padding: 10px; border-radius: 8px;
-        }
-        .legend-item { font-size: 12px; color: #ccc;
-        }
-        .legend-val { font-weight: bold; color: white;
-        margin-left: 3px;}
-        
-        #reflex-signal {
-            display: none;
-            position: absolute; top: 50%; left: 50%; 
-            width: 200px; height: 200px; border-radius: 50%;
-            transform: translate(-50%, -50%);
-            background-color: #333;
-            border: 4px solid #555;
-            z-index: 10; cursor: pointer; align-items: center; justify-content: center;
-            font-size: 32px; font-weight: 900; color: white; user-select: none;
-        }
+        .btn-reset { background-color: #555; border-color: #777; font-size: 12px; padding: 8px; margin-top: 20px; width: 150px;}
+        #feedback-msg { position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%); font-size: 40px; font-weight: 900; opacity: 0; pointer-events: none; transition: opacity 0.1s; text-shadow: 2px 2px 0 #000; z-index: 20; white-space: nowrap; }
+        #result-screen, #report-screen { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.95); flex-direction: column; align-items: center; justify-content: center; z-index: 150; }
+        #result-title { font-size: 20px; margin-bottom: 10px; color: #aaa; }
+        #result-main { font-size: 50px; font-weight: 900; color: #00FF7F; margin-bottom: 15px; text-align: center; white-space: pre-line;}
+        #result-sub { font-size: 16px; color: #ccc; margin-bottom: 30px; text-align: center; line-height: 1.6; padding: 0 20px;}
+        #close-result-btn { background:#fff; color:#000; border:none; font-weight:900; }
+        table { border-collapse: collapse; width: 95%; max-width: 400px; color: white; margin-bottom: 20px; font-size: 14px; }
+        th, td { border: 1px solid #444; padding: 8px; text-align: center; }
+        th { background-color: #222; color: #00FF7F; }
+        .rank-ss { color: #FF00FF; font-weight: 900; text-shadow: 0 0 5px #FF00FF; }
+        .rank-s { color: #FFD700; font-weight: 900; text-shadow: 0 0 5px #FFD700; }
+        .rank-a { color: #00FF7F; font-weight: bold; }
+        .rank-b { color: #00BFFF; }
+        .rank-c { color: white; }
+        #rank-legend { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; width: 90%; max-width: 350px; margin-bottom: 15px; background: rgba(255,255,255,0.1); padding: 10px; border-radius: 8px; }
+        .legend-item { font-size: 12px; color: #ccc; }
+        .legend-val { font-weight: bold; color: white; margin-left: 3px;}
+        #reflex-signal { display: none; position: absolute; top: 50%; left: 50%; width: 200px; height: 200px; border-radius: 50%; transform: translate(-50%, -50%); background-color: #333; border: 4px solid #555; z-index: 10; cursor: pointer; align-items: center; justify-content: center; font-size: 32px; font-weight: 900; color: white; user-select: none; }
     </style>
 </head>
 <body>
-
     <div id="menu-screen">
-        <h1>Badminton Vision V60<br><span style="font-size:12px; color:#aaa;">RANDOM & CLINCH MODE</span></h1>
-        
+        <h1>Badminton Vision V60<br><span style="font-size:12px; color:#aaa;">CLIMAX SPEED</span></h1>
         <div class="btn btn-report" onclick="showReport()">📊 総合レポート</div>
-
         <div class="section-title">【A】基礎・眼球トレ</div>
         <div class="btn btn-vision" onclick="startGame('saccade')">① 跳躍性 (後半: ターゲット乱数)</div>
         <div class="btn btn-vision" onclick="startGame('pursuit')">② 追従性 (TRACE)</div>
         <div class="btn btn-vision" onclick="startGame('depth')">③ 深視力 (RANDOM)</div>
-
         <div class="section-title">【B】測定</div>
         <div class="btn btn-measure" onclick="startGame('reflex')">④ 反射神経 (AGE TEST)</div>
-
         <div class="section-title">【C】実戦 (判断打ち分け)</div>
         <div class="btn btn-def" onclick="startGame('defense')">⑤ 守り (TAP: 迎撃)</div>
         <div class="btn btn-off" onclick="startGame('offense')">⑥ 攻め (赤↓ / 青↔)</div>
         <div class="btn btn-rally" onclick="startGame('rally')">⑦ 総合 (Mix)</div>
     </div>
-
     <div id="game-container">
         <canvas id="gameCanvas"></canvas>
         <div id="feedback-msg"></div>
@@ -199,19 +106,15 @@
             <div class="hud" id="hud-right">Time: 30</div>
         </div>
     </div>
-
     <div id="result-screen">
         <div id="result-title">RESULT</div>
         <div id="result-main">0</div>
         <div id="result-sub">...</div>
         <button id="close-result-btn" class="btn" onclick="backToMenu()">メニューに戻る</button>
-        <div style="font-size:11px;
-        color:#555; margin-top:10px;">(LOCK: 1.5s)</div>
+        <div style="font-size:11px; color:#555; margin-top:10px;">(LOCK: 1.5s)</div>
     </div>
-
     <div id="report-screen">
-        <h2 style="color:#00FF7F;
-        margin-bottom:5px;">TOTAL REPORT</h2>
+        <h2 style="color:#00FF7F; margin-bottom:5px;">TOTAL REPORT</h2>
         <div id="rank-legend">
             <div class="legend-item"><span class="rank-ss">SS</span><span class="legend-val">2500~</span></div>
             <div class="legend-item"><span class="rank-s">S</span><span class="legend-val">2000~</span></div>
@@ -221,8 +124,7 @@
         </div>
         <table id="report-table"></table>
         <div class="btn btn-reset" onclick="resetData()">全データ消去</div>
-        <div class="btn" style="background:#fff;
-        color:#333; margin-top:10px;" onclick="closeReport()">閉じる</div>
+        <div class="btn" style="background:#fff; color:#333; margin-top:10px;" onclick="closeReport()">閉じる</div>
     </div>
 
     <script>
@@ -254,9 +156,7 @@
         let animationFrameId;
         let gameTimerId;
         let resultLockTimer;
-
         let currentDifficulty = 0.0; 
-
         let saccadeTargetColor = 'green'; 
         let saccadeSwitchTimer = 0;
         let saccadePhase = 1; 
@@ -269,49 +169,29 @@
         let reflexStartTime = 0;
         let reflexState = 'idle';
         let reflexTimeout;
-
         let isTouching = false;
         let startX = 0, startY = 0;
         let currentX = 0, currentY = 0;
 
-        function resize() {
-            width = window.innerWidth;
-            height = window.innerHeight;
-            canvas.width = width;
-            canvas.height = height;
-        }
+        function resize() { width = window.innerWidth; height = window.innerHeight; canvas.width = width; canvas.height = height; }
         window.addEventListener('resize', resize);
         resize();
 
-        function saveBestScores() {
-            localStorage.setItem('bv_bestScores', JSON.stringify(bestScores));
-        }
-        function resetData() {
-            if(confirm("全ての記録を消去しますか？")) {
-                localStorage.removeItem('bv_bestScores');
-                bestScores = { saccade: 0, pursuit: 0, depth: 0, reflex: null, defense: 0, offense: 0, rally: 0 };
-                lastScores = { saccade: 0, pursuit: 0, depth: 0, reflex: null, defense: 0, offense: 0, rally: 0 };
-                showReport();
-            }
-        }
+        function saveBestScores() { localStorage.setItem('bv_bestScores', JSON.stringify(bestScores)); }
+        function resetData() { if(confirm("全ての記録を消去しますか？")) { localStorage.removeItem('bv_bestScores'); bestScores = { saccade: 0, pursuit: 0, depth: 0, reflex: null, defense: 0, offense: 0, rally: 0 }; lastScores = { saccade: 0, pursuit: 0, depth: 0, reflex: null, defense: 0, offense: 0, rally: 0 }; showReport(); } }
 
         function adjustDifficulty(success) {
             if(gameMode === 'reflex' || gameMode === 'pursuit') return;
             if (success) {
                 combo++;
-                // V60修正: 10秒以降（後半）は難易度上昇を加速し、全成功時にSSへ誘導
-                let boost = (timeLeft <= 10) ? 1.8 : 1.0; [cite: 80, 81]
+                // V60: 10秒以降はSS到達のために上昇率を加速
+                let boost = (timeLeft <= 10) ? 1.8 : 1.0;
                 let inc = (currentDifficulty < 0.5) ? 0.06 : 0.04;
-                currentDifficulty += (inc * boost); [cite: 82]
-                
+                currentDifficulty += (inc * boost);
                 if (currentDifficulty > 1.0) currentDifficulty = 1.0;
-                if(combo > 1) {
-                    comboEl.innerText = `${combo} COMBO!`;
-                    comboEl.style.opacity = 1;
-                }
+                if(combo > 1) { comboEl.innerText = `${combo} COMBO!`; comboEl.style.opacity = 1; }
             } else {
-                combo = 0;
-                comboEl.style.opacity = 0;
+                combo = 0; comboEl.style.opacity = 0;
                 currentDifficulty -= 0.15; 
                 if (currentDifficulty < 0.0) currentDifficulty = 0.0;
             }
@@ -322,7 +202,6 @@
             let lv = Math.floor(currentDifficulty * 10) + 1;
             if (currentDifficulty >= 1.0) diffValEl.innerText = "MAX";
             else diffValEl.innerText = `LV.${lv}`;
-            
             if(lv >= 9) diffValEl.style.color = "#FFD700";
             else if(lv >= 7) diffValEl.style.color = "#00FF7F"; 
             else if(lv >= 4) diffValEl.style.color = "#00BFFF"; 
@@ -339,12 +218,9 @@
             }
             let rank="C", title="Beginner";
             if (val >= 2500) { rank="SS"; title="Legend"; }
-            else if (val >= 2000) { rank="S";
-            title="Top Athlete"; }
-            else if (val >= 1500) { rank="A";
-            title="Athlete"; }
-            else if (val >= 800)  { rank="B";
-            title="General"; }
+            else if (val >= 2000) { rank="S"; title="Top Athlete"; }
+            else if (val >= 1500) { rank="A"; title="Athlete"; }
+            else if (val >= 800)  { rank="B"; title="General"; }
             return { rank: rank, title: title };
         }
 
@@ -357,161 +233,80 @@
         }
 
         function showReport() {
-            menuScreen.style.display = 'none';
-            reportScreen.style.display = 'flex';
+            menuScreen.style.display = 'none'; reportScreen.style.display = 'flex';
             const table = document.getElementById('report-table');
             let html = `<tr><th>項目</th><th>今回</th><th>Best</th></tr>`;
-            const modes = [
-                {id:'saccade', name:'① 跳躍性'}, {id:'pursuit', name:'② 追従性'}, {id:'depth', name:'③ 深視力'},
-                {id:'reflex', name:'④ 反射'},
-                {id:'defense', name:'⑤ 守り'}, {id:'offense', name:'⑥ 攻め'}, {id:'rally', name:'⑦ 総合'}
-            ];
+            const modes = [ {id:'saccade', name:'① 跳躍性'}, {id:'pursuit', name:'② 追従性'}, {id:'depth', name:'③ 深視力'}, {id:'reflex', name:'④ 反射'}, {id:'defense', name:'⑤ 守り'}, {id:'offense', name:'⑥ 攻め'}, {id:'rally', name:'⑦ 総合'} ];
             modes.forEach(m => {
                 const last = lastScores[m.id] !== null ? lastScores[m.id] : "-";
                 const best = bestScores[m.id] !== null ? bestScores[m.id] : "-";
                 const info = getRankInfo(m.id, bestScores[m.id]);
                 const cls = getRankColor(info.rank);
-         
                 let bestStr = (best === "-") ? "-" : `${best} <br><span class="${cls}">${info.rank}</span> <span style="font-size:10px">(${info.title})</span>`;
                 html += `<tr><td>${m.name}</td><td>${last}</td><td>${bestStr}</td></tr>`;
             });
             table.innerHTML = html;
         }
-        function closeReport() { reportScreen.style.display = 'none'; menuScreen.style.display = 'flex';
-        }
+        function closeReport() { reportScreen.style.display = 'none'; menuScreen.style.display = 'flex'; }
 
         function updateSaccadeRule() {
-            if(saccadeTargetColor === 'green') {
-                dynamicRuleEl.innerText = "TARGET: 🟩 GREEN";
-                dynamicRuleEl.style.color = "#00FF7F";
-                dynamicRuleEl.style.border = "2px solid #00FF7F";
-            } else {
-                dynamicRuleEl.innerText = "TARGET: 🟥 RED";
-                dynamicRuleEl.style.color = "#FF4500";
-                dynamicRuleEl.style.border = "2px solid #FF4500";
-            }
+            if(saccadeTargetColor === 'green') { dynamicRuleEl.innerText = "TARGET: 🟩 GREEN"; dynamicRuleEl.style.color = "#00FF7F"; dynamicRuleEl.style.border = "2px solid #00FF7F"; }
+            else { dynamicRuleEl.innerText = "TARGET: 🟥 RED"; dynamicRuleEl.style.color = "#FF4500"; dynamicRuleEl.style.border = "2px solid #FF4500"; }
         }
 
         function startGame(mode) {
-            gameMode = mode;
-            menuScreen.style.display = 'none';
-            resultScreen.style.display = 'none';
-            gameContainer.style.display = 'block';
-            reflexSignal.style.display = 'none';
-            actionGuideEl.innerText = "";
-            dynamicRuleEl.style.display = 'none';
-            score = 0; combo = 0; targets = []; effects = []; gameActive = true; spawnTimer = 0;
-            currentDifficulty = 0.0; 
-            comboEl.style.opacity = 0;
-            updateDiffDisplay();
-
-            if(mode === 'saccade') {
-                dynamicRuleEl.style.display = 'block';
-                saccadeTargetColor = 'green';
-                saccadePhase = 1; 
-                saccadeSwitchTimer = 0; 
-                updateSaccadeRule();
-            }
+            gameMode = mode; menuScreen.style.display = 'none'; resultScreen.style.display = 'none'; gameContainer.style.display = 'block'; reflexSignal.style.display = 'none'; actionGuideEl.innerText = ""; dynamicRuleEl.style.display = 'none';
+            score = 0; combo = 0; targets = []; effects = []; gameActive = true; spawnTimer = 0; currentDifficulty = 0.0; comboEl.style.opacity = 0; updateDiffDisplay();
+            if(mode === 'saccade') { dynamicRuleEl.style.display = 'block'; saccadeTargetColor = 'green'; saccadePhase = 1; saccadeSwitchTimer = 0; updateSaccadeRule(); }
             if(mode === 'defense') actionGuideEl.innerText = "TAP!";
             if(mode === 'offense') actionGuideEl.innerText = "🔴 ↓ SMASH\n🔵 ↔ CUT";
             if(mode === 'rally') actionGuideEl.innerText = "MIX!";
-            if (mode === 'reflex') {
-                hudLeft.innerText = "Reflex";
-                hudRight.innerText = "1/3";
-                reflexData = []; reflexCount = 0; initReflexRound();
-            } else {
-                timeLeft = (mode === 'rally') ?
-                60 : 30;
-                hudLeft.innerText = "Score: 0";
-                hudRight.innerText = `Time: ${timeLeft}`;
-                startGameTimer();
-                update();
-            }
+            if (mode === 'reflex') { hudLeft.innerText = "Reflex"; hudRight.innerText = "1/3"; reflexData = []; reflexCount = 0; initReflexRound(); }
+            else { timeLeft = (mode === 'rally') ? 60 : 30; hudLeft.innerText = "Score: 0"; hudRight.innerText = `Time: ${timeLeft}`; startGameTimer(); update(); }
         }
 
         function startGameTimer() {
             clearInterval(gameTimerId);
             gameTimerId = setInterval(() => {
-                timeLeft--;
-                hudRight.innerText = `Time: ${timeLeft}`;
-                
-                if (gameMode === 'saccade' && timeLeft === 20) {
-                    saccadePhase = 2;
-                    showFeedback("⚠️ RULE CHANGE!", "yellow");
-                    saccadeSwitchTimer = 60; // 初期切り替えを早めに設定
-                }
-
+                timeLeft--; hudRight.innerText = `Time: ${timeLeft}`;
+                if (gameMode === 'saccade' && timeLeft === 20) { saccadePhase = 2; showFeedback("⚠️ RULE CHANGE!", "yellow"); saccadeSwitchTimer = 60; }
                 if (timeLeft <= 0) finishGame();
             }, 1000);
         }
 
         function finishGame() {
-            gameActive = false;
-            clearInterval(gameTimerId);
-            cancelAnimationFrame(animationFrameId);
+            gameActive = false; clearInterval(gameTimerId); cancelAnimationFrame(animationFrameId);
             lastScores[gameMode] = score;
-            if (bestScores[gameMode] === null || score > bestScores[gameMode]) {
-                bestScores[gameMode] = score;
-                saveBestScores();
-            }
-            document.getElementById('result-title').innerText = "RESULT";
-            document.getElementById('result-main').innerText = score;
+            if (bestScores[gameMode] === null || score > bestScores[gameMode]) { bestScores[gameMode] = score; saveBestScores(); }
+            document.getElementById('result-title').innerText = "RESULT"; document.getElementById('result-main').innerText = score;
             const info = getRankInfo(gameMode, score);
             document.getElementById('result-sub').innerText = `CLASS: ${info.rank} (${info.title})`;
-            closeResultBtn.disabled = true; closeResultBtn.style.opacity = 0.5;
-            resultScreen.style.display = 'flex';
+            closeResultBtn.disabled = true; closeResultBtn.style.opacity = 0.5; resultScreen.style.display = 'flex';
             clearTimeout(resultLockTimer);
             resultLockTimer = setTimeout(() => { closeResultBtn.disabled = false; closeResultBtn.style.opacity = 1; }, 1500);
         }
 
-        function backToMenu() {
-            gameActive = false;
-            clearTimeout(reflexTimeout); clearInterval(gameTimerId); cancelAnimationFrame(animationFrameId);
-            resultScreen.style.display = 'none'; gameContainer.style.display = 'none'; menuScreen.style.display = 'flex';
-        }
+        function backToMenu() { gameActive = false; clearTimeout(reflexTimeout); clearInterval(gameTimerId); cancelAnimationFrame(animationFrameId); resultScreen.style.display = 'none'; gameContainer.style.display = 'none'; menuScreen.style.display = 'flex'; }
 
         function initReflexRound() {
-            reflexCount++;
-            if (reflexCount > REFLEX_MAX_COUNT) { showReflexResult(); return; }
+            reflexCount++; if (reflexCount > REFLEX_MAX_COUNT) { showReflexResult(); return; }
             hudRight.innerText = `${reflexCount}/${REFLEX_MAX_COUNT}`;
             reflexSignal.style.display = 'flex'; reflexSignal.style.backgroundColor = '#8B0000'; reflexSignal.innerText = "WAIT"; reflexState = 'wait';
             const delay = 1000 + Math.random() * 3000;
-            reflexTimeout = setTimeout(() => {
-                if(!gameActive) return;
-                reflexState = 'go'; reflexSignal.style.backgroundColor = '#00FF7F'; reflexSignal.innerText = "TAP!"; reflexStartTime = performance.now();
-            }, delay);
+            reflexTimeout = setTimeout(() => { if(!gameActive) return; reflexState = 'go'; reflexSignal.style.backgroundColor = '#00FF7F'; reflexSignal.innerText = "TAP!"; reflexStartTime = performance.now(); }, delay);
         }
 
-        function handleReflexClick(e) {
-            e.preventDefault();
-            if (reflexState === 'wait') {
-                clearTimeout(reflexTimeout);
-                showFeedback("FOUL!", "red"); reflexState = 'idle'; reflexCount--; setTimeout(initReflexRound, 1000); 
-            } else if (reflexState === 'go') {
-                const diff = Math.floor(performance.now() - reflexStartTime);
-                reflexData.push(diff); showFeedback(`${diff}ms`, "cyan"); reflexState = 'idle'; setTimeout(initReflexRound, 1000); 
-            }
-        }
-        reflexSignal.addEventListener('mousedown', handleReflexClick);
-        reflexSignal.addEventListener('touchstart', handleReflexClick);
+        function handleReflexClick(e) { e.preventDefault(); if (reflexState === 'wait') { clearTimeout(reflexTimeout); showFeedback("FOUL!", "red"); reflexState = 'idle'; reflexCount--; setTimeout(initReflexRound, 1000); } else if (reflexState === 'go') { const diff = Math.floor(performance.now() - reflexStartTime); reflexData.push(diff); showFeedback(`${diff}ms`, "cyan"); reflexState = 'idle'; setTimeout(initReflexRound, 1000); } }
+        reflexSignal.addEventListener('mousedown', handleReflexClick); reflexSignal.addEventListener('touchstart', handleReflexClick);
 
         function showReflexResult() {
-            gameActive = false;
-            let sum = 0, min = 9999;
-            for(let t of reflexData) { sum += t;
-            if(t < min) min = t; }
+            gameActive = false; let sum = 0, min = 9999; for(let t of reflexData) { sum += t; if(t < min) min = t; }
             const avg = Math.floor(sum / reflexData.length);
-            lastScores.reflex = avg;
-            if (bestScores.reflex === null || avg < bestScores.reflex) {
-                bestScores.reflex = avg;
-                saveBestScores();
-            }
-            document.getElementById('result-title').innerText = "REFLEX RESULT";
-            document.getElementById('result-main').innerText = `Avg: ${avg}ms\nBest: ${min}ms`;
+            lastScores.reflex = avg; if (bestScores.reflex === null || avg < bestScores.reflex) { bestScores.reflex = avg; saveBestScores(); }
+            document.getElementById('result-title').innerText = "REFLEX RESULT"; document.getElementById('result-main').innerText = `Avg: ${avg}ms\nBest: ${min}ms`;
             const info = getRankInfo('reflex', avg);
             document.getElementById('result-sub').innerText = `CLASS: ${info.rank} (${info.title})`;
-            closeResultBtn.disabled = true;
-            closeResultBtn.style.opacity = 0.5; resultScreen.style.display = 'flex';
+            closeResultBtn.disabled = true; closeResultBtn.style.opacity = 0.5; resultScreen.style.display = 'flex';
             setTimeout(() => { closeResultBtn.disabled = false; closeResultBtn.style.opacity = 1; }, 1500);
         }
 
@@ -523,442 +318,112 @@
             if(gameMode === 'saccade' && saccadePhase === 2) {
                 saccadeSwitchTimer--;
                 if(saccadeSwitchTimer <= 0) {
-                    // V60修正: ターゲット指示（赤/緑）をランダムで実施
-                    saccadeTargetColor = (Math.random() < 0.5) ? 'red' : 'green'; [cite: 147, 148]
-                    updateSaccadeRule();
-                    showFeedback("CHANGE!", "yellow");
-                    // ランダムな秒数で次回の切り替えを設定
+                    // V60: ターゲット変更をランダムで実施
+                    saccadeTargetColor = (Math.random() < 0.5) ? 'red' : 'green';
+                    updateSaccadeRule(); showFeedback("CHANGE!", "yellow");
                     saccadeSwitchTimer = 60 + Math.random() * 120;
                 }
             }
-
             if (targets.length === 0) {
                 spawnTimer--;
                 if(spawnTimer <= 0) {
                     spawnTarget();
-                    // V60修正: 後半になるにつれ間隔を早くする (timeLeftを活用)
-                    let speedRatio = Math.max(0.3, timeLeft / 30); [cite: 151, 154]
-                    if(gameMode==='defense'||gameMode==='offense'||gameMode==='rally') {
-                        spawnTimer = (Math.max(5, 20 - currentDifficulty*15)) * speedRatio; [cite: 151]
-                    } else if (gameMode==='depth') {
-                        spawnTimer = (Math.max(10, 25 - currentDifficulty*20)) * speedRatio; [cite: 152]
-                    } else {
-                        spawnTimer = (Math.max(10, 35 - currentDifficulty*25)) * speedRatio; [cite: 153]
-                    }
+                    // V60: 後半になるにつれ間隔を早くする
+                    let speedRatio = Math.max(0.3, timeLeft / 30);
+                    if(gameMode==='defense'||gameMode==='offense'||gameMode==='rally') spawnTimer = (Math.max(5, 20 - currentDifficulty*15)) * speedRatio;
+                    else if (gameMode==='depth') spawnTimer = (Math.max(10, 25 - currentDifficulty*20)) * speedRatio;
+                    else spawnTimer = (Math.max(10, 35 - currentDifficulty*25)) * speedRatio;
                     if(gameMode==='saccade') spawnTimer = 0;
                 }
             }
-            updateTargets();
-            updateEffects(); drawEffects();
-            animationFrameId = requestAnimationFrame(update);
+            updateTargets(); updateEffects(); drawEffects(); animationFrameId = requestAnimationFrame(update);
         }
 
-        function drawCourt() {
-            const cx = (width - width*0.9)/2;
-            const cy = height*0.2;
-            const cw = width*0.9; const ch = height*0.6;
-            ctx.fillStyle = "#2E8B57"; ctx.fillRect(cx, cy, cw, ch);
-            ctx.strokeStyle = "white"; ctx.lineWidth=3; ctx.strokeRect(cx, cy, cw, ch);
-            ctx.beginPath(); ctx.moveTo(cx, cy+ch/2); ctx.lineTo(cx+cw, cy+ch/2); ctx.stroke();
-            ctx.lineWidth=1;
-            ctx.beginPath(); ctx.moveTo(cx, cy+ch*0.1); ctx.lineTo(cx+cw, cy+ch*0.1);
-            ctx.stroke(); 
-            ctx.beginPath(); ctx.moveTo(cx, cy+ch*0.9); ctx.lineTo(cx+cw, cy+ch*0.9); ctx.stroke(); 
-            ctx.beginPath(); ctx.moveTo(cx+cw/2, cy); ctx.lineTo(cx+cw/2, cy+ch); ctx.stroke();
-        }
+        function drawCourt() { const cx = (width - width*0.9)/2; const cy = height*0.2; const cw = width*0.9; const ch = height*0.6; ctx.fillStyle = "#2E8B57"; ctx.fillRect(cx, cy, cw, ch); ctx.strokeStyle = "white"; ctx.lineWidth=3; ctx.strokeRect(cx, cy, cw, ch); ctx.beginPath(); ctx.moveTo(cx, cy+ch/2); ctx.lineTo(cx+cw, cy+ch/2); ctx.stroke(); ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(cx, cy+ch*0.1); ctx.lineTo(cx+cw, cy+ch*0.1); ctx.stroke(); ctx.beginPath(); ctx.moveTo(cx, cy+ch*0.9); ctx.lineTo(cx+cw, cy+ch*0.9); ctx.stroke(); ctx.beginPath(); ctx.moveTo(cx+cw/2, cy); ctx.lineTo(cx+cw/2, cy+ch); ctx.stroke(); }
 
         function spawnTarget() {
             const d = currentDifficulty;
             if (gameMode === 'saccade') {
                 const r = 35;
                 let life = 70 - (d * 40); 
-                // V60修正: 後半はLifeをさらに短縮し、ハイスピード化を強調
-                if (saccadePhase === 2) {
-                    life = life * (0.3 + (timeLeft / 30) * 0.4); [cite: 162, 163]
-                }
-                
-                let minY = height * 0.25;
-                let maxY = height - r;
-                let safeY = Math.random() * (maxY - minY) + minY;
-
+                if (saccadePhase === 2) life = life * (0.3 + (timeLeft / 30) * 0.4);
+                let minY = height * 0.25; let maxY = height - r; let safeY = Math.random() * (maxY - minY) + minY;
                 let color, type;
-                if (saccadePhase === 1) {
-                    color = '#00FF7F';
-                    type = 'green_ball';
-                } else {
-                    // V60修正: 出現ターゲットも赤・緑をランダムに混合
-                    let isRed = Math.random() < 0.5; [cite: 166, 167]
-                    color = isRed ? '#FF4500' : '#00FF7F'; 
-                    type = isRed ? 'red_ball' : 'green_ball';
+                if (saccadePhase === 1) { color = '#00FF7F'; type = 'green_ball'; } 
+                else { 
+                    // V60: 出現ターゲットもランダムに変更
+                    let isRed = Math.random() < 0.5;
+                    color = isRed ? '#FF4500' : '#00FF7F'; type = isRed ? 'red_ball' : 'green_ball';
                 }
-                
                 targets.push({ x: Math.random()*(width-2*r)+r, y: safeY, r: r, color: color, type: type, life: life, maxLife: life, isHit: false });
             }
-            else if (gameMode === 'pursuit') {
-                let spd = 0.03 + (d * 0.05);
-                targets.push({ x: width/2, y: height/2, r: 35, color: 'cyan', type: 'moving', angle: 0, speed: spd, baseSpeed: spd });
-            }
-            else if (gameMode === 'depth') {
-                let baseZ = 4 + (d * 6);
-                let zSpd = baseZ + Math.random();
-                let tx = Math.random() * (width - 100) + 50;
-                let ty = Math.random() * (height - 100) + 50;
-                targets.push({ x: tx, y: ty, r: 5, color: 'yellow', type: 'zoom', growing: true, maxR: 110, zSpeed: zSpd, isHit: false });
-            }
+            else if (gameMode === 'pursuit') { let spd = 0.03 + (d * 0.05); targets.push({ x: width/2, y: height/2, r: 35, color: 'cyan', type: 'moving', angle: 0, speed: spd, baseSpeed: spd }); }
+            else if (gameMode === 'depth') { let baseZ = 4 + (d * 6); let zSpd = baseZ + Math.random(); let tx = Math.random() * (width - 100) + 50; let ty = Math.random() * (height - 100) + 50; targets.push({ x: tx, y: ty, r: 5, color: 'yellow', type: 'zoom', growing: true, maxR: 110, zSpeed: zSpd, isHit: false }); }
             else {
                 let type = 'rally';
                 if(gameMode === 'defense') type = 'def';
-                else if(gameMode === 'offense') {
-                    type = (Math.random() < 0.6) ?
-                    'off_smash' : 'off_cut';
-                }
-                else {
-                    let r = Math.random();
-                    if(r < 0.4) type = 'def';
-                    else if(r < 0.7) type = 'off_smash';
-                    else type = 'feint';
-                }
-                
-                const startX = Math.random() * (width*0.8) + width*0.1;
-                const startY = height * 0.1;
-                const endY = height * 0.85;
-                if (type === 'def') {
-                    let speed = 15 + (d * 20);
-                    let tx = (Math.random() * width*0.8) + width*0.1; 
-                    let vx = (tx - startX) / ( (endY-startY)/speed );
-                    targets.push({
-                        x: startX, y: startY, r: 10,
-                        type: 'shuttle', mode: type,
-                        vx: vx, speed: speed, 
-                        hitY: height * 0.75, state: 'white',
-                        endY: endY, isHit: false
-                    });
-                } 
-                else if (type === 'off_smash') {
-                    let targetY = height * 0.3;
-                    targets.push({
-                        x: startX, y: targetY, r: 10,
-                        type: 'lob_smash', mode: type,
-                        speed: 0, state: 'hang', 
-                        hitY: targetY, hangTime: 40, 
-                        endY: endY, isHit: false
-                    });
-                }
-                else if (type === 'off_cut') {
-                    let targetY = height * 0.4;
-                    targets.push({
-                        x: startX, y: targetY, r: 10,
-                        type: 'lob_cut', mode: type,
-                        speed: 0, state: 'hang',
-                        hitY: targetY, hangTime: 35, 
-                        endY: endY, isHit: false
-                    });
-                }
-                else if (type === 'feint') {
-                    let initialSpeed = 15 + (d * 20);
-                    let tx = (Math.random() * width*0.8) + width*0.1;
-                    let vx = (tx - startX) / ( (endY-startY)/initialSpeed );
-                    targets.push({
-                        x: startX, y: startY, r: 10,
-                        type: 'feint', mode: type,
-                        vx: vx, speed: initialSpeed,
-                        hitY: height * 0.6, 
-                        state: 'white',
-                        endY: endY, isHit: false,
-                        braking: false 
-                    });
-                }
+                else if(gameMode === 'offense') type = (Math.random() < 0.6) ? 'off_smash' : 'off_cut';
+                else { let r = Math.random(); if(r < 0.4) type = 'def'; else if(r < 0.7) type = 'off_smash'; else type = 'feint'; }
+                const startX = Math.random() * (width*0.8) + width*0.1; const startY = height * 0.1; const endY = height * 0.85;
+                if (type === 'def') { let speed = 15 + (d * 20); let tx = (Math.random() * width*0.8) + width*0.1; let vx = (tx - startX) / ( (endY-startY)/speed ); targets.push({ x: startX, y: startY, r: 10, type: 'shuttle', mode: type, vx: vx, speed: speed, hitY: height * 0.75, state: 'white', endY: endY, isHit: false }); } 
+                else if (type === 'off_smash') { let targetY = height * 0.3; targets.push({ x: startX, y: targetY, r: 10, type: 'lob_smash', mode: type, speed: 0, state: 'hang', hitY: targetY, hangTime: 40, endY: endY, isHit: false }); }
+                else if (type === 'off_cut') { let targetY = height * 0.4; targets.push({ x: startX, y: targetY, r: 10, type: 'lob_cut', mode: type, speed: 0, state: 'hang', hitY: targetY, hangTime: 35, endY: endY, isHit: false }); }
+                else if (type === 'feint') { let initialSpeed = 15 + (d * 20); let tx = (Math.random() * width*0.8) + width*0.1; let vx = (tx - startX) / ( (endY-startY)/initialSpeed ); targets.push({ x: startX, y: startY, r: 10, type: 'feint', mode: type, vx: vx, speed: initialSpeed, hitY: height * 0.6, state: 'white', endY: endY, isHit: false, braking: false }); }
             }
         }
 
         function updateTargets() {
             for (let i = targets.length - 1; i >= 0; i--) {
-                const t = targets[i];
-                if (t.isHit) { targets.splice(i, 1); continue; }
+                const t = targets[i]; if (t.isHit) { targets.splice(i, 1); continue; }
+                if (t.type === 'green_ball' || t.type === 'red_ball') { t.life--; if(t.life<=0) { targets.splice(i,1); let isTarget = (saccadeTargetColor==='green' && t.type==='green_ball') || (saccadeTargetColor==='red' && t.type==='red_ball'); if(isTarget) adjustDifficulty(false); } else { let alpha = t.life / t.maxLife; drawCircle(t.x, t.y, t.r, t.color, alpha); } }
+                else if (t.type === 'moving') { t.angle += t.speed; t.x = width/2 + Math.cos(t.angle * 1.5)* (width*0.4); t.y = height/2 + Math.sin(t.angle * 2.3) * (height*0.25); let isTracking = false; if(isTouching && Math.hypot(t.x - currentX, t.y - currentY) < t.r + 20) isTracking = true; if(isTracking) { t.speed += 0.0003; if(Math.random()<0.1) adjustDifficulty(true); let bonus = 1.0 + currentDifficulty * 2.0; let pts = Math.floor(1 * bonus); score += pts; hudLeft.innerText = `Score: ${score}`; drawCircle(t.x, t.y, t.r, "magenta", 1); } else { if(t.speed > t.baseSpeed) t.speed -= 0.001; drawCircle(t.x, t.y, t.r, "cyan", 1); } }
+                else if (t.type === 'zoom') { if(t.growing) { t.r += t.zSpeed; if(t.r >= t.maxR) t.growing = false; } else { t.r -= t.zSpeed; if(t.r <= 0) { showFeedback("MISS", "gray"); adjustDifficulty(false); targets.splice(i, 1); continue; } } const color = (t.r > t.maxR*0.85) ? "yellow" : "#444"; drawCircle(t.x, t.y, t.r, color, 1); }
+                else if (t.type === 'shuttle') { t.y += t.speed; t.x += t.vx; let progress = (t.y - (height*0.1)) / (height*0.75); const currentR = 15 + (progress * 35); const zoneSize = Math.max(50, 120 - (currentDifficulty * 50)); if (t.y > t.hitY - zoneSize && t.y < t.hitY + zoneSize) { t.state = 'yellow'; drawShuttle(t.x, t.y, currentR, "#FFD700"); } else { t.state = 'white'; drawShuttle(t.x, t.y, currentR, "white"); } if (t.y > height + 50) { if (!t.isHit) { showFeedback("MISS", "gray"); adjustDifficulty(false); targets.splice(i, 1); } } }
+                else if (t.type === 'lob_smash' || t.type === 'lob_cut') { if (t.state === 'hang') { t.hangTime--; if (t.hangTime <= 0) t.state = 'falling'; } else if (t.state === 'falling') { t.y += 15; } let currentR = 50; let color = (t.type === 'lob_smash') ? "#FF4500" : "#00BFFF"; if (t.state === 'falling') color = "gray"; drawShuttle(t.x, t.y, currentR, color); if(t.state === 'hang') { ctx.fillStyle = "rgba(255,255,255,0.7)"; ctx.font = "20px Arial"; let txt = (t.type==='lob_smash') ? "↓" : "↔"; ctx.fillText(txt, t.x-10, t.y-60); } if (t.y > height + 50) { if (!t.isHit) { showFeedback("MISS", "gray"); adjustDifficulty(false); targets.splice(i, 1); } } }
+                else if (t.type === 'feint') { if (t.y > height * 0.3 && !t.braking) { t.braking = true; t.speed *= 0.2; } t.y += t.speed; t.x += t.vx * (t.braking ? 0.2 : 1.0); let progress = (t.y - (height*0.1)) / (height*0.6); const currentR = 15 + (progress * 30); if (t.braking && t.y > t.hitY - 60 && t.y < t.hitY + 60) { t.state = 'yellow'; drawShuttle(t.x, t.y, currentR, "#DA70D6"); } else { t.state = 'white'; drawShuttle(t.x, t.y, currentR, "white"); } if (t.y > height + 50) { if (!t.isHit) { showFeedback("MISS", "gray"); adjustDifficulty(false); targets.splice(i, 1); } } }
+            }
+        }
+        function updateEffects() { for(let i=effects.length-1; i>=0; i--) { let e = effects[i]; e.life--; e.r+=5; if(e.life<=0) effects.splice(i,1); } }
+        function drawEffects() { ctx.save(); for(let e of effects) { ctx.beginPath(); ctx.arc(e.x, e.y, e.r, 0, Math.PI*2); ctx.strokeStyle = `rgba(255,255,255,${e.life/10})`; ctx.lineWidth=5; ctx.stroke(); } ctx.restore(); }
+        function drawCircle(x, y, r, color, alpha) { ctx.globalAlpha = alpha; ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI*2); ctx.fillStyle = color; ctx.fill(); ctx.strokeStyle = "white"; ctx.lineWidth=2; ctx.stroke(); ctx.globalAlpha = 1.0; }
+        function drawShuttle(x, y, r, color) { ctx.fillStyle = color; ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI*2); ctx.fill(); ctx.fillStyle = "rgba(255,255,255,0.5)"; ctx.beginPath(); ctx.moveTo(x,y); ctx.lineTo(x-r*0.7, y-r*1.4); ctx.lineTo(x+r*0.7, y-r*1.4); ctx.fill(); }
 
-                if (t.type === 'green_ball' || t.type === 'red_ball') {
-                    t.life--;
-                    if(t.life<=0) { 
-                        targets.splice(i,1);
-                        let isTarget = (saccadeTargetColor==='green' && t.type==='green_ball') || (saccadeTargetColor==='red' && t.type==='red_ball');
-                        if(isTarget) adjustDifficulty(false);
-                    } 
-                    else { let alpha = t.life / t.maxLife;
-                    drawCircle(t.x, t.y, t.r, t.color, alpha); }
-                }
-                else if (t.type === 'moving') {
-                    t.angle += t.speed;
-                    t.x = width/2 + Math.cos(t.angle * 1.5)* (width*0.4);
-                    t.y = height/2 + Math.sin(t.angle * 2.3) * (height*0.25);
-                    let isTracking = false;
-                    if(isTouching && Math.hypot(t.x - currentX, t.y - currentY) < t.r + 20) isTracking = true;
-                    if(isTracking) {
-                        t.speed += 0.0003;
-                        if(Math.random()<0.1) adjustDifficulty(true);
-                        let bonus = 1.0 + currentDifficulty * 2.0;
-                        let pts = Math.floor(1 * bonus);
-                        score += pts;
-                        hudLeft.innerText = `Score: ${score}`;
-                        drawCircle(t.x, t.y, t.r, "magenta", 1);
-                    } else {
-                        if(t.speed > t.baseSpeed) t.speed -= 0.001;
-                        drawCircle(t.x, t.y, t.r, "cyan", 1);
-                    }
-                }
-                else if (t.type === 'zoom') {
-                    if(t.growing) {
-                        t.r += t.zSpeed;
-                        if(t.r >= t.maxR) t.growing = false; 
-                    } else {
-                        t.r -= t.zSpeed;
-                        if(t.r <= 0) { 
-                            showFeedback("MISS", "gray");
-                            adjustDifficulty(false);
-                            targets.splice(i, 1); 
-                            continue;
-                        }
-                    }
-                    const color = (t.r > t.maxR*0.85) ?
-                    "yellow" : "#444";
-                    drawCircle(t.x, t.y, t.r, color, 1);
-                }
-                else if (t.type === 'shuttle') {
-                    t.y += t.speed;
-                    t.x += t.vx;
-                    let progress = (t.y - (height*0.1)) / (height*0.75);
-                    const currentR = 15 + (progress * 35);
-                    const zoneSize = Math.max(50, 120 - (currentDifficulty * 50)); 
-                    if (t.y > t.hitY - zoneSize && t.y < t.hitY + zoneSize) {
-                        t.state = 'yellow';
-                        drawShuttle(t.x, t.y, currentR, "#FFD700");
-                    } else {
-                        t.state = 'white';
-                        drawShuttle(t.x, t.y, currentR, "white");
-                    }
-                    if (t.y > height + 50) { if (!t.isHit) { showFeedback("MISS", "gray");
-                    adjustDifficulty(false); targets.splice(i, 1); } }
-                }
-                else if (t.type === 'lob_smash' || t.type === 'lob_cut') {
-                    if (t.state === 'hang') {
-                        t.hangTime--;
-                        if (t.hangTime <= 0) t.state = 'falling';
-                    } else if (t.state === 'falling') {
-                        t.y += 15;
-                    }
-                    let currentR = 50;
-                    let color = (t.type === 'lob_smash') ? "#FF4500" : "#00BFFF";
-                    if (t.state === 'falling') color = "gray";
-                    drawShuttle(t.x, t.y, currentR, color);
-                    
-                    if(t.state === 'hang') {
-                        ctx.fillStyle = "rgba(255,255,255,0.7)";
-                        font = "20px Arial";
-                        let txt = (t.type==='lob_smash') ? "↓" : "↔";
-                        ctx.fillText(txt, t.x-10, t.y-60);
-                    }
-                    if (t.y > height + 50) { if (!t.isHit) { showFeedback("MISS", "gray");
-                    adjustDifficulty(false); targets.splice(i, 1); } }
-                }
-                else if (t.type === 'feint') {
-                    if (t.y > height * 0.3 && !t.braking) { t.braking = true;
-                    t.speed *= 0.2; }
-                    t.y += t.speed;
-                    t.x += t.vx * (t.braking ? 0.2 : 1.0); 
-                    let progress = (t.y - (height*0.1)) / (height*0.6);
-                    const currentR = 15 + (progress * 30);
-                    if (t.braking && t.y > t.hitY - 60 && t.y < t.hitY + 60) {
-                        t.state = 'yellow';
-                        drawShuttle(t.x, t.y, currentR, "#DA70D6"); 
-                    } else {
-                        t.state = 'white';
-                        drawShuttle(t.x, t.y, currentR, "white");
-                    }
-                    if (t.y > height + 50) { if (!t.isHit) { showFeedback("MISS", "gray");
-                    adjustDifficulty(false); targets.splice(i, 1); } }
-                }
-            }
-        }
-        
-        function updateEffects() {
-            for(let i=effects.length-1; i>=0; i--) {
-                let e = effects[i];
-                e.life--; e.r+=5;
-                if(e.life<=0) effects.splice(i,1);
-            }
-        }
-        function drawEffects() {
-            ctx.save();
-            for(let e of effects) {
-                ctx.beginPath();
-                ctx.arc(e.x, e.y, e.r, 0, Math.PI*2);
-                ctx.strokeStyle = `rgba(255,255,255,${e.life/10})`; ctx.lineWidth=5; ctx.stroke();
-            }
-            ctx.restore();
-        }
-        
-        function drawCircle(x, y, r, color, alpha) {
-            ctx.globalAlpha = alpha;
-            ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI*2);
-            ctx.fillStyle = color; ctx.fill(); ctx.strokeStyle = "white"; ctx.lineWidth=2; ctx.stroke(); ctx.globalAlpha = 1.0;
-        }
-
-        function drawShuttle(x, y, r, color) {
-            ctx.fillStyle = color;
-            ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI*2); ctx.fill();
-            ctx.fillStyle = "rgba(255,255,255,0.5)"; ctx.beginPath(); ctx.moveTo(x,y); 
-            ctx.lineTo(x-r*0.7, y-r*1.4); ctx.lineTo(x+r*0.7, y-r*1.4); ctx.fill();
-        }
-
-        function handleStart(e) {
-            if(!gameActive) return;
-            const touches = e.changedTouches || [e];
-            for(let t of touches) { 
-                startX = t.clientX;
-                startY = t.clientY;
-                currentX = startX; currentY = startY;
-                isTouching = true;
-                if(gameMode !== 'offense') checkHit(startX, startY, 'tap');
-            }
-        }
-        function handleMove(e) {
-            if(!gameActive) return;
-            e.preventDefault(); 
-            const touches = e.changedTouches || [e];
-            for(let t of touches) { 
-                currentX = t.clientX;
-                currentY = t.clientY;
-            }
-        }
-        function handleEnd(e) { 
-            if(!gameActive) return;
-            const touches = e.changedTouches || [e];
-            for(let t of touches) {
-                let dx = t.clientX - startX;
-                let dy = t.clientY - startY;
-                if (Math.abs(dx) < 30 && Math.abs(dy) < 30) {
-                    isTouching = false;
-                    return;
-                }
-                if (Math.abs(dy) > Math.abs(dx)) {
-                    if (dy > 0) checkHit(startX, startY, 'swipe_down');
-                } else {
-                    checkHit(startX, startY, 'swipe_side');
-                }
-            }
-            isTouching = false;
-        }
+        function handleStart(e) { if(!gameActive) return; const touches = e.changedTouches || [e]; for(let t of touches) { startX = t.clientX; startY = t.clientY; currentX = startX; currentY = startY; isTouching = true; if(gameMode !== 'offense') checkHit(startX, startY, 'tap'); } }
+        function handleMove(e) { if(!gameActive) return; e.preventDefault(); const touches = e.changedTouches || [e]; for(let t of touches) { currentX = t.clientX; currentY = t.clientY; } }
+        function handleEnd(e) { if(!gameActive) return; const touches = e.changedTouches || [e]; for(let t of touches) { let dx = t.clientX - startX; let dy = t.clientY - startY; if (Math.abs(dx) < 30 && Math.abs(dy) < 30) { isTouching = false; return; } if (Math.abs(dy) > Math.abs(dx)) { if (dy > 0) checkHit(startX, startY, 'swipe_down'); } else { checkHit(startX, startY, 'swipe_side'); } } isTouching = false; }
 
         function checkHit(tx, ty, actionType) {
             if(gameMode === 'pursuit') return;
             for(let i=targets.length-1; i>=0; i--) {
-                const t = targets[i];
-                if(t.isHit) continue; 
-
+                const t = targets[i]; if(t.isHit) continue; 
                 let hit = false; let pts = 0; let msg = "";
                 if (gameMode === 'saccade') {
                     if (t.type === 'green_ball' || t.type === 'red_ball') {
                         if (actionType === 'tap' && Math.hypot(t.x-tx, t.y-ty) < t.r + 20) {
-                            
                             let isCorrect = false;
-                            if(saccadePhase === 1) {
-                                if(t.type === 'green_ball') isCorrect = true;
-                            } else {
-                                if (saccadeTargetColor === 'green' && t.type === 'green_ball') isCorrect = true;
-                                if (saccadeTargetColor === 'red' && t.type === 'red_ball') isCorrect = true;
-                            }
-
-                            if (isCorrect) {
-                                hit = true;
-                                pts = 30; msg = "HIT";
-                            } else {
-                                showFeedback("-5 SEC!", "red");
-                                adjustDifficulty(false);
-                                timeLeft -= 5;
-                                hudRight.innerText = `Time: ${Math.max(0, timeLeft)}`;
-                                targets.splice(i, 1);
-                                return;
-                            }
+                            if(saccadePhase === 1) { if(t.type === 'green_ball') isCorrect = true; } 
+                            else { if (saccadeTargetColor === 'green' && t.type === 'green_ball') isCorrect = true; if (saccadeTargetColor === 'red' && t.type === 'red_ball') isCorrect = true; }
+                            if (isCorrect) { hit = true; pts = 30; msg = "HIT"; } 
+                            else { showFeedback("-5 SEC!", "red"); adjustDifficulty(false); timeLeft -= 5; hudRight.innerText = `Time: ${Math.max(0, timeLeft)}`; targets.splice(i, 1); return; }
                         }
                     }
                 }
-                else if (t.type === 'zoom') { 
-                    if(actionType === 'tap' && Math.hypot(t.x-tx, t.y-ty) < t.r + 20) {
-                        if (t.r > t.maxR*0.8) { hit = true;
-                        pts = 70; msg = "GOOD!"; }
-                        else { showFeedback("WAIT", "orange");
-                        return; }
-                    }
-                }
-                else if (t.type === 'shuttle') { 
-                    if(actionType === 'tap' && Math.hypot(t.x-tx, t.y-ty) < 70) {
-                        if(t.state === 'yellow') { hit = true;
-                        pts = 50; msg = "NICE"; }
-                        else { showFeedback("TIMING...", "orange");
-                        return; }
-                    }
-                }
-                else if (t.type === 'lob_smash') {
-                    if(Math.hypot(t.x-tx, t.y-ty) < 100 && t.state === 'hang') {
-                        if(actionType === 'swipe_down') { hit = true; pts = 50;
-                        msg = "SMASH!!"; } 
-                        else if(actionType === 'swipe_side') { showFeedback("WRONG!", "red");
-                        adjustDifficulty(false); targets.splice(i,1); return; }
-                    }
-                }
-                else if (t.type === 'lob_cut') {
-                    if(Math.hypot(t.x-tx, t.y-ty) < 100 && t.state === 'hang') {
-                        if(actionType === 'swipe_side') { hit = true;
-                        pts = 50; msg = "CUT!"; } 
-                        else if(actionType === 'swipe_down') { showFeedback("WRONG!", "red");
-                        adjustDifficulty(false); targets.splice(i,1); return; }
-                    }
-                }
-                else if (t.type === 'feint') {
-                    if(Math.hypot(t.x-tx, t.y-ty) < 70) {
-                        if(t.state === 'yellow') { hit = true; pts = 100;
-                        msg = "READ!"; } 
-                    }
-                }
-
+                else if (t.type === 'zoom') { if(actionType === 'tap' && Math.hypot(t.x-tx, t.y-ty) < t.r + 20) { if (t.r > t.maxR*0.8) { hit = true; pts = 70; msg = "GOOD!"; } else { showFeedback("WAIT", "orange"); return; } } }
+                else if (t.type === 'shuttle') { if(actionType === 'tap' && Math.hypot(t.x-tx, t.y-ty) < 70) { if(t.state === 'yellow') { hit = true; pts = 50; msg = "NICE"; } else { showFeedback("TIMING...", "orange"); return; } } }
+                else if (t.type === 'lob_smash') { if(Math.hypot(t.x-tx, t.y-ty) < 100 && t.state === 'hang') { if(actionType === 'swipe_down') { hit = true; pts = 50; msg = "SMASH!!"; } else if(actionType === 'swipe_side') { showFeedback("WRONG!", "red"); adjustDifficulty(false); targets.splice(i,1); return; } } }
+                else if (t.type === 'lob_cut') { if(Math.hypot(t.x-tx, t.y-ty) < 100 && t.state === 'hang') { if(actionType === 'swipe_side') { hit = true; pts = 50; msg = "CUT!"; } else if(actionType === 'swipe_down') { showFeedback("WRONG!", "red"); adjustDifficulty(false); targets.splice(i,1); return; } } }
+                else if (t.type === 'feint') { if(Math.hypot(t.x-tx, t.y-ty) < 70) { if(t.state === 'yellow') { hit = true; pts = 100; msg = "READ!"; } } }
                 if(hit) {
-                    t.isHit = true;
-                    let basePts = 50;
-                    if(gameMode === 'rally') basePts = 30; 
-                    if(gameMode === 'depth') basePts = 70;
-                    if(t.type === 'shuttle' || t.type === 'lob_smash' || t.type === 'lob_cut' || t.type === 'feint') pts = basePts;
-                    if(gameMode === 'saccade') pts = 30; 
-
-                    let diffBonus = 1.0 + currentDifficulty * 2.0; 
-                    let finalPts = Math.floor(pts * diffBonus);
-                    score += finalPts;
-                    hudLeft.innerText = `Score: ${score}`;
-                    showFeedback(msg, "cyan");
-                    spawnEffect(t.x, t.y);
-                    adjustDifficulty(true);
-                    
-                    targets.splice(i, 1);
-                    if(gameMode!=='saccade') spawnTimer = 5; 
-                    break;
+                    t.isHit = true; let basePts = 50; if(gameMode === 'rally') basePts = 30; if(gameMode === 'depth') basePts = 70; if(t.type === 'shuttle' || t.type === 'lob_smash' || t.type === 'lob_cut' || t.type === 'feint') pts = basePts; if(gameMode === 'saccade') pts = 30; 
+                    let diffBonus = 1.0 + currentDifficulty * 2.0; let finalPts = Math.floor(pts * diffBonus); score += finalPts; hudLeft.innerText = `Score: ${score}`; showFeedback(msg, "cyan"); spawnEffect(t.x, t.y); adjustDifficulty(true);
+                    targets.splice(i, 1); if(gameMode!=='saccade') spawnTimer = 5; break;
                 }
             }
         }
+        function showFeedback(text, color) { feedbackEl.innerText = text; feedbackEl.style.color = color; feedbackEl.style.opacity = 1; setTimeout(()=>feedbackEl.style.opacity=0, 400); }
+        function spawnEffect(x,y) { effects.push({x:x, y:y, life:10, r:10}); }
 
-        function showFeedback(text, color) {
-            feedbackEl.innerText = text;
-            feedbackEl.style.color = color;
-            feedbackEl.style.opacity = 1; setTimeout(()=>feedbackEl.style.opacity=0, 400);
-        }
-        function spawnEffect(x,y) {
-            effects.push({x:x, y:y, life:10, r:10});
-        }
-
-        window.addEventListener('mousedown', handleStart);
-        window.addEventListener('mousemove', handleMove);
-        window.addEventListener('mouseup', handleEnd);
-        window.addEventListener('touchstart', handleStart, {passive: false});
-        window.addEventListener('touchmove', handleMove, {passive: false});
-        window.addEventListener('touchend', handleEnd);
-
+        window.addEventListener('mousedown', handleStart); window.addEventListener('mousemove', handleMove); window.addEventListener('mouseup', handleEnd); window.addEventListener('touchstart', handleStart, {passive: false}); window.addEventListener('touchmove', handleMove, {passive: false}); window.addEventListener('touchend', handleEnd);
     </script>
 </body>
 </html>
