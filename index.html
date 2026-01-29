@@ -3,66 +3,42 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Badminton Vision V51</title>
+    <title>Badminton Vision V52</title>
     <style>
-        /* スタイルはV50を継承し、一部最適化 */
-        body { margin: 0; overflow: hidden; background-color: #8B4513; font-family: sans-serif; color: white; touch-action: none; user-select: none; -webkit-user-select: none; }
+        /* V51のスタイルを継承 */
+        body { margin: 0; overflow: hidden; background-color: #8B4513; font-family: sans-serif; color: white; touch-action: none; user-select: none; }
         #game-container { display: none; width: 100%; height: 100%; }
         canvas { display: block; }
         #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; padding: 15px; box-sizing: border-box; display: flex; justify-content: space-between; }
         .hud { font-size: 18px; font-weight: bold; text-shadow: 1px 1px 2px black; font-family: monospace; }
-        #combo-display { color: #FFD700; font-size: 24px; font-weight:900; text-align: center; width: 100%; position: absolute; top: 90px; opacity: 0; transition: opacity 0.1s; text-shadow: 0 0 10px orange; }
-        #diff-display { position: absolute; bottom: 20px; right: 20px; font-size: 14px; color: #aaa; text-align: right; }
-        #diff-val { font-size: 20px; font-weight: bold; color: white; }
-        #dynamic-rule { position: absolute; top: 10%; left: 50%; transform: translate(-50%, 0); font-size: 28px; font-weight: 900; color: white; pointer-events: none; white-space: nowrap; z-index: 6; text-shadow: 2px 2px 0 #000; background-color: rgba(0,0,0,0.5); padding: 5px 15px; border-radius: 20px; display: none; }
-        #action-guide { position: absolute; top: 20%; left: 50%; transform: translate(-50%, 0); font-size: 20px; font-weight: bold; color: rgba(255,255,255,0.7); pointer-events: none; white-space: pre-line; z-index: 5; text-align: center; line-height: 1.4; text-shadow: 1px 1px 2px black; }
-        #menu-screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.92); display: flex; flex-direction: column; align-items: center; justify-content: flex-start; z-index: 100; overflow-y: auto; padding-top: 20px; padding-bottom: 40px; }
-        h1 { margin: 10px 0 10px 0; font-size: 22px; text-align: center; color: #00FF7F; border-bottom: 2px solid #00FF7F; padding-bottom: 5px; }
-        .section-title { color: #ddd; font-size: 13px; margin-top: 15px; margin-bottom: 5px; width: 90%; max-width: 350px; text-align: left; border-left: 3px solid #00FF7F; padding-left: 8px; }
-        .btn { width: 90%; max-width: 350px; padding: 14px; margin: 6px 0; font-size: 16px; font-weight: bold; color: white; background-color: #333; border: 1px solid #555; border-radius: 6px; cursor: pointer; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.5); }
-        .btn:active { transform: scale(0.98); background-color: #444; }
-        .btn-vision { background-color: #2F4F4F; border-color: #00FA9A; color: #00FA9A; }
-        .btn-measure { background-color: #8B0000; border-color: #FF6347; color: white; }
-        .btn-def { background-color: #191970; border-color: #4169E1; }
-        .btn-off { background-color: #8B4500; border-color: #FFA500; }
-        .btn-rally { background-color: #4B0082; border-color: #9370DB; }
-        #feedback-msg { position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%); font-size: 40px; font-weight: 900; opacity: 0; pointer-events: none; transition: opacity 0.1s; text-shadow: 2px 2px 0 #000; z-index: 20; white-space: nowrap; }
+        #combo-display { color: #FFD700; font-size: 24px; font-weight:900; text-align: center; width: 100%; position: absolute; top: 90px; opacity: 0; text-shadow: 0 0 10px orange; }
+        #dynamic-rule { position: absolute; top: 10%; left: 50%; transform: translate(-50%, 0); font-size: 28px; font-weight: 900; color: white; background-color: rgba(0,0,0,0.5); padding: 5px 15px; border-radius: 20px; display: none; text-shadow: 2px 2px 0 #000; }
+        #menu-screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.92); display: flex; flex-direction: column; align-items: center; padding-top: 20px; z-index: 100; overflow-y: auto; }
+        h1 { font-size: 22px; color: #00FF7F; border-bottom: 2px solid #00FF7F; }
+        .btn { width: 90%; max-width: 350px; padding: 14px; margin: 6px 0; font-size: 16px; font-weight: bold; color: white; background-color: #333; border: 1px solid #555; border-radius: 6px; cursor: pointer; text-align: center; }
+        .btn-vision { background-color: #2F4F4F; border-color: #00FA9A; }
+        #feedback-msg { position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%); font-size: 40px; font-weight: 900; opacity: 0; transition: opacity 0.1s; text-shadow: 2px 2px 0 #000; z-index: 20; }
         #result-screen, #report-screen { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.95); flex-direction: column; align-items: center; justify-content: center; z-index: 150; }
-        #result-main { font-size: 50px; font-weight: 900; color: #00FF7F; margin-bottom: 15px; text-align: center; white-space: pre-line;}
-        table { border-collapse: collapse; width: 95%; max-width: 400px; color: white; margin-bottom: 20px; font-size: 14px; }
+        #result-main { font-size: 50px; font-weight: 900; color: #00FF7F; text-align: center; }
+        table { border-collapse: collapse; width: 95%; max-width: 400px; color: white; font-size: 14px; }
         th, td { border: 1px solid #444; padding: 8px; text-align: center; }
-        th { background-color: #222; color: #00FF7F; }
         .rank-ss { color: #FF00FF; font-weight: 900; text-shadow: 0 0 5px #FF00FF; }
-        .rank-s { color: #FFD700; font-weight: 900; text-shadow: 0 0 5px #FFD700; }
-        .rank-a { color: #00FF7F; font-weight: bold; }
-        #reflex-signal { display: none; position: absolute; top: 50%; left: 50%; width: 200px; height: 200px; border-radius: 50%; transform: translate(-50%, -50%); background-color: #333; border: 4px solid #555; z-index: 10; cursor: pointer; align-items: center; justify-content: center; font-size: 32px; font-weight: 900; color: white; }
+        .rank-s { color: #FFD700; font-weight: 900; }
+        .rank-a { color: #00FF7F; }
     </style>
 </head>
 <body>
-
     <div id="menu-screen">
-        <h1>Badminton Vision V51<br><span style="font-size:12px; color:#aaa;">DYNAMIC JUDGMENT</span></h1>
-        <div class="btn btn-report" onclick="showReport()">📊 総合レポート</div>
-        <div class="section-title">【A】基礎・眼球トレ</div>
-        <div class="btn btn-vision" onclick="startGame('saccade')">① 跳躍性 (後半: 判断モード)</div>
-        <div class="btn btn-vision" onclick="startGame('pursuit')">② 追従性 (TRACE)</div>
-        <div class="btn btn-vision" onclick="startGame('depth')">③ 深視力 (RANDOM)</div>
-        <div class="section-title">【B】測定</div>
-        <div class="btn btn-measure" onclick="startGame('reflex')">④ 反射神経 (AGE TEST)</div>
-        <div class="section-title">【C】実戦 (判断打ち分け)</div>
-        <div class="btn btn-def" onclick="startGame('defense')">⑤ 守り (TAP)</div>
-        <div class="btn btn-off" onclick="startGame('offense')">⑥ 攻め (SWIPE)</div>
-        <div class="btn btn-rally" onclick="startGame('rally')">⑦ 総合 (Mix)</div>
-    </div>
+        <h1>Badminton Vision V52</h1>
+        <div class="btn" onclick="showReport()">📊 総合レポート</div>
+        <div class="btn btn-vision" onclick="startGame('saccade')">① 跳躍性 (SS調整版)</div>
+        </div>
 
     <div id="game-container">
         <canvas id="gameCanvas"></canvas>
         <div id="feedback-msg"></div>
         <div id="dynamic-rule">TARGET: 🟩</div>
-        <div id="action-guide"></div>
-        <div id="reflex-signal">WAIT</div>
         <div id="combo-display">0 COMBO</div>
-        <div id="diff-display">SPEED: <span id="diff-val">LV.1</span></div>
         <div id="ui-layer">
             <div class="hud" id="hud-left">Score: 0</div>
             <div class="hud" id="hud-right">Time: 30</div>
@@ -70,10 +46,10 @@
     </div>
 
     <div id="result-screen">
-        <div id="result-title">RESULT</div>
+        <div style="color:#aaa">RESULT</div>
         <div id="result-main">0</div>
-        <div id="result-sub">...</div>
-        <button id="close-result-btn" class="btn" onclick="backToMenu()">メニューに戻る</button>
+        <div id="result-sub" style="margin-bottom:20px">CLASS: -</div>
+        <button class="btn" onclick="backToMenu()">メニューに戻る</button>
     </div>
 
     <div id="report-screen">
@@ -94,194 +70,126 @@
         const feedbackEl = document.getElementById('feedback-msg');
         const dynamicRuleEl = document.getElementById('dynamic-rule');
         const comboEl = document.getElementById('combo-display');
-        const diffValEl = document.getElementById('diff-val');
-        const reflexSignal = document.getElementById('reflex-signal');
-        const closeResultBtn = document.getElementById('close-result-btn');
 
         let width, height, gameMode, score, combo, timeLeft, gameActive;
         let targets = [], effects = [], spawnTimer = 0, animationFrameId, gameTimerId;
-        let currentDifficulty = 0.0;
-        let saccadeTargetColor = 'green', saccadePhase = 1;
-        let lastScores = {}, bestScores = JSON.parse(localStorage.getItem('bv_bestScores')) || {};
-        let isTouching = false, startX = 0, startY = 0, currentX = 0, currentY = 0;
+        let currentDifficulty = 0.0, saccadeTargetColor = 'green', saccadePhase = 1;
+        let lastScores = {}, bestScores = JSON.parse(localStorage.getItem('bv_bestScores')) || {saccade:0, pursuit:0, depth:0, reflex:null, defense:0, offense:0, rally:0};
 
         function resize() { width = window.innerWidth; height = window.innerHeight; canvas.width = width; canvas.height = height; }
-        window.addEventListener('resize', resize);
-        resize();
+        window.addEventListener('resize', resize); resize();
 
-        function updateSaccadeRule() {
-            if(saccadeTargetColor === 'green') {
-                dynamicRuleEl.innerText = "TARGET: 🟩 GREEN";
-                dynamicRuleEl.style.color = "#00FF7F";
-                dynamicRuleEl.style.border = "2px solid #00FF7F";
-            } else {
-                dynamicRuleEl.innerText = "TARGET: 🟥 RED";
-                dynamicRuleEl.style.color = "#FF4500";
-                dynamicRuleEl.style.border = "2px solid #FF4500";
-            }
+        function getRankInfo(mode, val) {
+            if (!val) return { rank: "C", title: "Beginner" };
+            if (val >= 2500) return { rank: "SS", title: "Legend" };
+            if (val >= 2000) return { rank: "S", title: "Top Athlete" };
+            if (val >= 1500) return { rank: "A", title: "Athlete" };
+            if (val >= 800) return { rank: "B", title: "General" };
+            return { rank: "C", title: "Beginner" };
         }
 
         function startGame(mode) {
-            gameMode = mode;
-            menuScreen.style.display = 'none';
-            gameContainer.style.display = 'block';
-            resultScreen.style.display = 'none';
-            score = 0; combo = 0; targets = []; effects = []; gameActive = true;
-            currentDifficulty = 0.0;
-            timeLeft = (mode === 'rally') ? 60 : 30;
-            
-            if(mode === 'saccade') {
-                saccadePhase = 1; saccadeTargetColor = 'green';
-                dynamicRuleEl.style.display = 'block';
-                updateSaccadeRule();
-            } else {
-                dynamicRuleEl.style.display = 'none';
-            }
-            
-            hudLeft.innerText = "Score: 0";
-            hudRight.innerText = `Time: ${timeLeft}`;
-            startTimer();
-            update();
+            gameMode = mode; score = 0; combo = 0; targets = []; gameActive = true; currentDifficulty = 0.0;
+            timeLeft = 30; saccadePhase = 1; saccadeTargetColor = 'green';
+            menuScreen.style.display = 'none'; gameContainer.style.display = 'block'; resultScreen.style.display = 'none';
+            if(mode === 'saccade') { dynamicRuleEl.style.display = 'block'; updateSaccadeRule(); }
+            startTimer(); update();
         }
 
         function startTimer() {
             clearInterval(gameTimerId);
             gameTimerId = setInterval(() => {
-                timeLeft--;
-                hudRight.innerText = `Time: ${timeLeft}`;
-                if (gameMode === 'saccade' && timeLeft === 20) {
-                    saccadePhase = 2;
-                    showFeedback("JUDGMENT MODE!", "yellow");
-                }
+                timeLeft--; hudRight.innerText = `Time: ${timeLeft}`;
+                if (timeLeft === 20) { saccadePhase = 2; showFeedback("JUDGMENT!", "yellow"); }
                 if (timeLeft <= 0) finishGame();
             }, 1000);
         }
 
+        function updateSaccadeRule() {
+            dynamicRuleEl.innerText = `TARGET: ${saccadeTargetColor === 'green' ? '🟩 GREEN' : '🟥 RED'}`;
+            dynamicRuleEl.style.color = saccadeTargetColor === 'green' ? "#00FF7F" : "#FF4500";
+        }
+
         function spawnTarget() {
-            // V51: 跳躍性では常に画面に1つだけにする
-            if (gameMode === 'saccade' && targets.length > 0) return;
-
-            const d = currentDifficulty;
-            if (gameMode === 'saccade') {
-                const r = 35;
-                let life = 75 - (d * 45);
-                if (saccadePhase === 2) {
-                    life = life * 0.65; // 後半はさらに高速化
-                    // 出現ごとにターゲット色とルールをランダム化
-                    saccadeTargetColor = Math.random() < 0.5 ? 'green' : 'red';
-                    updateSaccadeRule();
-                }
-
-                // 色のランダム決定（後半のみ）
-                let targetType = 'green_ball';
-                let color = '#00FF7F';
-                if (saccadePhase === 2) {
-                    if(Math.random() < 0.5) {
-                        targetType = 'red_ball';
-                        color = '#FF4500';
-                    }
-                }
-
-                targets.push({
-                    x: Math.random()*(width-2*r)+r,
-                    y: Math.random()*(height*0.7 - height*0.2) + height*0.2,
-                    r: r, color: color, type: targetType, 
-                    life: life, maxLife: life, isHit: false
-                });
-            } 
-            // ... 他のモードはV50と同様のため省略（必要に応じて統合）
+            if (targets.length > 0) return;
+            const r = 35;
+            let life = 70 - (currentDifficulty * 50);
+            if (saccadePhase === 2) { 
+                life *= 0.6; 
+                saccadeTargetColor = Math.random() < 0.5 ? 'green' : 'red';
+                updateSaccadeRule();
+            }
+            let isRed = Math.random() < 0.5 && saccadePhase === 2;
+            targets.push({
+                x: Math.random()*(width-2*r)+r, y: Math.random()*(height*0.6)+height*0.2,
+                r: r, color: isRed ? '#FF4500' : '#00FF7F', type: isRed ? 'red_ball' : 'green_ball',
+                life: life, maxLife: life
+            });
         }
 
         function update() {
             if (!gameActive) return;
-            ctx.fillStyle = "#8B4513";
-            ctx.fillRect(0,0,width,height);
-
-            // ターゲットがいない時、ランダムな間隔で生成
-            if (targets.length === 0) {
-                spawnTimer--;
-                if (spawnTimer <= 0) {
-                    spawnTarget();
-                    // 一定周期を避けるためのランダムな遊び (0.1〜0.4秒程度)
-                    spawnTimer = 5 + Math.random() * 20; 
-                }
-            }
-
+            ctx.fillStyle = "#8B4513"; ctx.fillRect(0,0,width,height);
+            if (targets.length === 0) { spawnTimer--; if (spawnTimer <= 0) { spawnTarget(); spawnTimer = 5 + Math.random()*15; } }
             for (let i = targets.length - 1; i >= 0; i--) {
-                const t = targets[i];
-                t.life--;
-                if (t.life <= 0) {
-                    // 正解色を見逃した場合はコンボリセット
-                    let isCorrectColor = (saccadeTargetColor === 'green' && t.type === 'green_ball') || (saccadeTargetColor === 'red' && t.type === 'red_ball');
-                    if (isCorrectColor && gameMode === 'saccade') adjustDifficulty(false);
-                    targets.splice(i, 1);
-                    continue;
+                const t = targets[i]; t.life--;
+                if (t.life <= 0) { 
+                    if ((saccadeTargetColor === 'green' && t.type === 'green_ball') || (saccadeTargetColor === 'red' && t.type === 'red_ball')) {
+                        combo = 0; currentDifficulty = Math.max(0, currentDifficulty - 0.1); 
+                    }
+                    targets.splice(i, 1); continue; 
                 }
-                let alpha = t.life / t.maxLife;
-                drawCircle(t.x, t.y, t.r, t.color, alpha);
+                ctx.globalAlpha = t.life / t.maxLife;
+                ctx.beginPath(); ctx.arc(t.x, t.y, t.r, 0, Math.PI*2);
+                ctx.fillStyle = t.color; ctx.fill(); ctx.strokeStyle = "white"; ctx.stroke(); ctx.globalAlpha = 1;
             }
-            updateEffects(); drawEffects();
             animationFrameId = requestAnimationFrame(update);
         }
 
         function checkHit(tx, ty) {
             for (let i = targets.length - 1; i >= 0; i--) {
                 const t = targets[i];
-                if (Math.hypot(t.x - tx, t.y - ty) < t.r + 25) {
-                    let isCorrect = true;
-                    if (gameMode === 'saccade' && saccadePhase === 2) {
-                        isCorrect = (saccadeTargetColor === 'green' && t.type === 'green_ball') || (saccadeTargetColor === 'red' && t.type === 'red_ball');
-                    }
-
+                if (Math.hypot(t.x - tx, t.y - ty) < t.r + 30) {
+                    let isCorrect = (saccadeTargetColor === 'green' && t.type === 'green_ball') || (saccadeTargetColor === 'red' && t.type === 'red_ball');
                     if (isCorrect) {
-                        score += Math.floor(30 * (1 + currentDifficulty * 2));
+                        combo++;
+                        let bonus = 1 + (currentDifficulty * 2) + (combo * 0.05); // SS用スコア強化
+                        score += Math.floor(50 * bonus);
                         hudLeft.innerText = `Score: ${score}`;
                         showFeedback("HIT!", "cyan");
-                        spawnEffect(t.x, t.y);
-                        adjustDifficulty(true);
+                        currentDifficulty = Math.min(1.0, currentDifficulty + 0.06);
                     } else {
-                        // 不正解時のペナルティ
-                        timeLeft = Math.max(0, timeLeft - 3);
-                        hudRight.innerText = `Time: ${timeLeft}`;
-                        showFeedback("-3 SEC!", "red");
-                        adjustDifficulty(false);
+                        timeLeft = Math.max(0, timeLeft - 3); showFeedback("-3 SEC!", "red");
+                        combo = 0; currentDifficulty = Math.max(0, currentDifficulty - 0.15);
                     }
-                    targets.splice(i, 1);
-                    break;
+                    targets.splice(i, 1); break;
                 }
             }
         }
 
-        function adjustDifficulty(success) {
-            if (success) { combo++; currentDifficulty = Math.min(1.0, currentDifficulty + 0.05); }
-            else { combo = 0; currentDifficulty = Math.max(0.0, currentDifficulty - 0.1); }
-            updateDiffDisplay();
+        function finishGame() {
+            gameActive = false; clearInterval(gameTimerId); cancelAnimationFrame(animationFrameId);
+            bestScores.saccade = Math.max(bestScores.saccade || 0, score);
+            localStorage.setItem('bv_bestScores', JSON.stringify(bestScores));
+            const info = getRankInfo('saccade', score);
+            document.getElementById('result-main').innerText = score;
+            document.getElementById('result-sub').innerText = `CLASS: ${info.rank} (${info.title})`;
+            resultScreen.style.display = 'flex';
         }
 
-        function updateDiffDisplay() {
-            let lv = Math.floor(currentDifficulty * 10) + 1;
-            diffValEl.innerText = currentDifficulty >= 1.0 ? "MAX" : `LV.${lv}`;
-        }
-
-        function drawCircle(x, y, r, color, alpha) {
-            ctx.globalAlpha = alpha; ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI*2);
-            ctx.fillStyle = color; ctx.fill(); ctx.strokeStyle = "white"; ctx.lineWidth = 2; ctx.stroke(); ctx.globalAlpha = 1.0;
-        }
-
-        function showFeedback(text, color) {
-            feedbackEl.innerText = text; feedbackEl.style.color = color; feedbackEl.style.opacity = 1;
-            setTimeout(() => feedbackEl.style.opacity = 0, 400);
-        }
-
-        function updateEffects() { for(let i=effects.length-1; i>=0; i--) { effects[i].life--; effects[i].r+=5; if(effects[i].life<=0) effects.splice(i,1); } }
-        function drawEffects() { for(let e of effects) { ctx.beginPath(); ctx.arc(e.x, e.y, e.r, 0, Math.PI*2); ctx.strokeStyle = `rgba(255,255,255,${e.life/10})`; ctx.stroke(); } }
-        function spawnEffect(x,y) { effects.push({x:x, y:y, life:10, r:10}); }
-
-        function finishGame() { gameActive = false; clearInterval(gameTimerId); cancelAnimationFrame(animationFrameId); resultScreen.style.display = 'flex'; document.getElementById('result-main').innerText = score; }
-        function backToMenu() { gameActive = false; menuScreen.style.display = 'flex'; gameContainer.style.display = 'none'; resultScreen.style.display = 'none'; }
-
+        function backToMenu() { resultScreen.style.display = 'none'; gameContainer.style.display = 'none'; menuScreen.style.display = 'flex'; }
+        function showFeedback(text, color) { feedbackEl.innerText = text; feedbackEl.style.color = color; feedbackEl.style.opacity = 1; setTimeout(()=>feedbackEl.style.opacity=0, 400); }
+        
+        canvas.addEventListener('mousedown', (e) => checkHit(e.clientX, e.clientY));
         canvas.addEventListener('touchstart', (e) => { e.preventDefault(); checkHit(e.touches[0].clientX, e.touches[0].clientY); }, {passive:false});
-        canvas.addEventListener('mousedown', (e) => { checkHit(e.clientX, e.clientY); });
+
+        function showReport() {
+            menuScreen.style.display = 'none'; reportScreen.style.display = 'flex';
+            const table = document.getElementById('report-table');
+            const info = getRankInfo('saccade', bestScores.saccade);
+            table.innerHTML = `<tr><th>項目</th><th>Best</th></tr><tr><td>① 跳躍性</td><td>${bestScores.saccade}<br><span class="rank-${info.rank.toLowerCase()}">${info.rank}</span></td></tr>`;
+        }
+        function closeReport() { reportScreen.style.display = 'none'; menuScreen.style.display = 'flex'; }
     </script>
 </body>
 </html>
